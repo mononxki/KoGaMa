@@ -5,14 +5,14 @@ from colorama import Fore, Style
 def fetch_data_from_model(model_link, headers):
     response = requests.get(model_link, headers=headers)
     if response.status_code == 200:
-        # Extract data
+        
         extracted_data = extract_data(response.text)
         return extracted_data
     else:
         print(f"Failed to fetch data from {model_link}. Status code: {response.status_code}")
         return None
 
-# Customize this function based on how you want to extract data from the site
+
 def extract_data(html_content):
     soup = BeautifulSoup(html_content, 'html.parser')
     sold_element = soup.find('li', class_='sold')
@@ -37,7 +37,7 @@ def fetch_username(user_id, headers):
         return None
 
 def fetch_user_models(user_id, headers):
-    # Define the URL for the user's marketplace page
+    
     base_url = f"https://www.kogama.com/profile/{user_id}/marketplace/model/?page=1&count=180"
     response = requests.get(base_url, headers=headers)
 
@@ -45,24 +45,24 @@ def fetch_user_models(user_id, headers):
         soup = BeautifulSoup(response.text, 'html.parser')
         model_elements = soup.find_all('li', class_='shop-item')
 
-        # Initialize counter for total sold, total XP, total cost, and gold earned
+        
         total_sold_count = 0
         total_xp_earned = 0
         total_cost = len(model_elements) * 10
         gold_earned = 0
 
-        # Fetch username
+        
         username = fetch_username(user_id, headers)
         if username:
             print(f"{Fore.LIGHTRED_EX}Username: {username}{Style.RESET_ALL}")
 
-        # Fetch data from each model page and aggregate
+        
         for model_element in model_elements:
             model_id = model_element.find('a')['href'].split('/')[-2]
             model_link = "https://www.kogama.com" + model_element.find('a')['href']
             extracted_data = fetch_data_from_model(model_link, headers)
             if extracted_data:
-                # Extract the sold count and add it to the total count
+                
                 sold_count = int(extracted_data.split()[1].replace('\xa0', ''))
                 total_sold_count += sold_count
 
@@ -73,10 +73,10 @@ def fetch_user_models(user_id, headers):
                 # Calculate gold earned (assuming 1 gold per sale)
                 gold_earned += sold_count
 
-                # Print individual records with colorama formatting
+                
                 print(f"Model ID: {Fore.LIGHTMAGENTA_EX}{model_id} | Solds: {Fore.LIGHTBLUE_EX}{sold_count}{Style.RESET_ALL} | XP Earned: {Fore.LIGHTGREEN_EX}*{xp_earned}{Style.RESET_ALL}")
 
-        # Print total sold count, total XP, total cost, and gold earned
+        
         print(f"{Fore.LIGHTCYAN_EX}Total Sold Count for User {Fore.LIGHTRED_EX}{username}{Fore.LIGHTCYAN_EX}: {Fore.LIGHTBLUE_EX}{total_sold_count}{Style.RESET_ALL}")
         print(f"{Fore.LIGHTYELLOW_EX}Total Cost of Models: {Fore.LIGHTBLUE_EX}{total_cost} Gold{Style.RESET_ALL}")
         print(f"{Fore.LIGHTGREEN_EX}Gold Earned from Sales: {Fore.LIGHTBLUE_EX}{gold_earned} Gold{Style.RESET_ALL}")
@@ -86,13 +86,13 @@ def fetch_user_models(user_id, headers):
         print(f"Failed to fetch data from {base_url}. Status code: {response.status_code}")
 
 def main():
-    # Prompt the user for Kogama user ID
+    
     user_id = input("Enter Kogama User ID: ")
 
     # Define user agent header
     headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3'}
 
-    # Fetch and aggregate data from user's marketplace models
+    
     fetch_user_models(user_id, headers)
 
 if __name__ == "__main__":
