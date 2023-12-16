@@ -1,7 +1,7 @@
 // ==UserScript==
-// @name         KoGaMa: Celestify Theme
-// @namespace    github.com/xymine
-// @version       2.7(5)
+// @name         KoGaMa: Celestify Theme V2
+// @namespace    github.com/2facvd
+// @version       2.1
 // @description  A personal KoGaMa Theme.
 // @author       Awxi, Aoxu, Simon
 // @match       https://*.kogama.com/*
@@ -135,7 +135,7 @@ GM_addStyle(`
     border-radius: 1px;
 }
 body#root-page-mobile {
-    background-image: url('https://i.imgur.com/1Wsn1XE.png'); /* Replace 'your-image-url.jpg' with your desired image URL */
+    background-image: url('https://i.imgur.com/GT970Ka.png'); /* Replace 'your-image-url.jpg' with your desired image URL */
     background-repeat: repeat-x;
     line-height: 1;
     display: flex;
@@ -148,7 +148,7 @@ body#root-page-mobile {
     background-color: none;
 }
 body {
-  background-image: url('https://i.imgur.com/1Wsn1XE.png');
+  background-image: url('https://i.imgur.com/GT970Ka.png');
   background-position: center;
   background-repeat: no-repeat;
   background-attachment: fixed;
@@ -156,7 +156,7 @@ body {
   height: 100%;
 }
 #content-container{
-  background-image: url("https://i.imgur.com/1Wsn1XE.png");
+  background-image: url("https://i.imgur.com/GT970Ka.png");
   background-position: center;
   background-repeat: no-repeat;
   background-attachment: fixed;
@@ -164,7 +164,7 @@ body {
   height: 100%;
 }
 body#root-page-mobile header#pageheader .pageheader-inner {
-  background-image: url("https://i.imgur.com/1Wsn1XE.png");
+  background-image: url("https://i.imgur.com/GT970Ka.png");
   background-position: center;
   background-repeat: no-repeat;
   background-attachment: fixed;
@@ -191,7 +191,7 @@ display: none;
 }
 
 body#root-page-mobile header#pageheader {
-    background-image: url('https://i.imgur.com/1Wsn1XE.png'); /* Replace 'your-image-url.jpg' with your desired image URL */
+    background-image: url('https://i.imgur.com/GT970Ka.png'); /* Replace 'your-image-url.jpg' with your desired image URL */
     background-position: center;
     background-repeat: no-repeat;
     background-size: cover;
@@ -459,7 +459,7 @@ display: none;
 
 #unity #unity-player-container-wrapper.standalone .standalone-wrapper .game-image-container .game-image { backdrop-filter: blur(10px); }
 body#root-page-mobile header#pageheader #profile-extended {
-  background-image: url("https://i.imgur.com/ZNFz11g.png");
+  background-image: url("https://wallpapercave.com/wp/wp4504931.png");
   background-position: center;
   background-repeat: no-repeat;
   background-attachment: fixed;
@@ -553,7 +553,7 @@ border-radius: 25px;
  	/* banner size */
 #mobile-page #profile-page .section-top {
 	height: 380px;
-	background-image: url('https://i.imgur.com/1Wsn1XE.png');
+	background-image: url('https://wallpapercave.com/wp/wp4504931.png');
 	  background-position: center;
   background-repeat: no-repeat;
   background-attachment: fixed;
@@ -851,7 +851,7 @@ box-shadow: 0 0 10px #fff;
       }
 
     #mobile-page #profile-page .creations-feed section.news-feed {
-    	top: 150px;
+    	top: 180px;
     	left: 350px;
     	position: relative;
     }
@@ -1080,7 +1080,7 @@ document.addEventListener('paste', allowPaste, true);
         const bioText = document.querySelector('.description-container .text');
         if (!bioText) return;
 
-        const imgurImageUrl = 'https://i.imgur.com/OyBdq6i.png';
+        const imgurImageUrl = 'https://i.imgur.com/KvzzqBF.png';
 
         const copyButton = createImgurButton(imgurImageUrl, function() {
             const textToCopy = bioText.innerText;
@@ -1447,7 +1447,7 @@ textContainer.style.fontFamily = "Comfortaa, cursive";
         const replyButton = document.createElement("img");
         replyButton.className = "reply-button";
         replyButton.style.cursor = "pointer";
-        replyButton.src = "https://i.imgur.com/GwWM5z4.png";
+        replyButton.src = "https://i.imgur.com/PUMZG8i.png";
 
         const replyContainer = document.createElement("div");
         replyContainer.className = "reply-container";
@@ -1544,7 +1544,7 @@ textContainer.style.fontFamily = "Comfortaa, cursive";
 
 // Create the menu button
 const menuButton = document.createElement('img');
-menuButton.src = 'https://i.imgur.com/4YnnXIh.png';
+menuButton.src = 'https://i.imgur.com/1qQVmnY.png';
 menuButton.style.width = '40px'; // Larger width for better visibility
 menuButton.style.height = '40px'; // Larger height for better visibility
 menuButton.style.marginRight = '10px';
