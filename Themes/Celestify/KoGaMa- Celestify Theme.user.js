@@ -2272,7 +2272,7 @@ async function retrieveIDFromUsername(friendUsername) {
           {
             id: '10590799',
             text: 'Truly a great contributor! Thank you for helping me spot all bugs!',
-            imageUrl: 'https://i.imgur.com/wGe1bVV.pngg'
+            imageUrl: 'https://i.imgur.com/wGe1bVV.png'
         },
           {
             id: '5585592',
