@@ -1259,30 +1259,16 @@ setTimeout(function() {
         textContainer.className = "text-container";
         textContainer.innerHTML = `
         <b>UPDATES</b><br><br>
-        · (Contributors) Exchanged profile credits for badges. <br>
-        · (Contributors) Custom description glow. <br>
-        · Edited Leaderboard style.  <br>
-        · Quality of life update.  <br>
-        · Fixed usercreation menu on contributor profiles.  <br>
-        · PreviewUsername Updated Version. <br>
-        · Further code-side improvemenets for myself. <br>
+        · Fixed missing icons and theme background. <br>
+        · Edited Contributor Badges. <br>
+        · A couple style-issues got rewritten and improved.  <br>
         <br><br>
-
-        <b>Future Plans</b><br><br>
-
-        📚 Friend Custom Username <br>
-        👻 Fixing color scheme to make text more visible and less eye threatening <br>
-        💌 Translation Plugin (Still In-development) <br><br>
-
-
-
 
         <b>CREDITS</b><br><br>
         ❤ Huge thank you to everyone that keeps supporting me during the development of this theme, seriously, love you ❤. <br>
         For this patch release once again I ought to thank Awxi for developing IS_TYPING_INDICATOR and being a supportive friend.<br>
         I also want to show my gratitude towards Raptor, Aoxu and Xumor who helped me to test it all and make sure it's hard to break! <br><br><br>
-         <b><a href="https://discord.gg/fUC9xhbVud" target="_blank">
-    <img src="https://i.imgur.com/wEKK7rk.png" alt="Support Server" class="discord-image">
+
   </a></b>
 `;
 
@@ -1292,7 +1278,7 @@ textContainer.style.fontFamily = "Comfortaa, cursive";
         // Create the title container
         var titleContainer = document.createElement("div");
         titleContainer.className = "title-container";
-        titleContainer.innerHTML = "✨ StarLog - 2.5.6V Release";
+        titleContainer.innerHTML = "✨ StarLog - Rewrite V2";
         titleContainer.style.padding = "10px";
         titleContainer.style.fontFamily = "Comfortaa, cursive";
         titleContainer.style.fontWeight = "bold";
