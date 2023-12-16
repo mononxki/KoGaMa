@@ -2262,37 +2262,37 @@ async function retrieveIDFromUsername(friendUsername) {
         {
             id: '669312073',
             text: 'A silly badge for a cool person. Truly the best financial supporter.',
-            imageUrl: 'https://i.imgur.com/eDd16P8.png'
+            imageUrl: 'https://i.imgur.com/zjjosWn.png'
         },
          {
             id: '36355',
             text: 'Awxi has been a truly amazing help and supportive friend along the creation of the theme!',
-            imageUrl: 'https://i.imgur.com/eDd16P8.png'
+            imageUrl: 'https://i.imgur.com/zjjosWn.png'
         },
           {
             id: '10590799',
             text: 'Truly a great contributor! Thank you for helping me spot all bugs!',
-            imageUrl: 'https://i.imgur.com/RbYsuVC.png'
+            imageUrl: 'https://i.imgur.com/wGe1bVV.pngg'
         },
           {
             id: '5585592',
             text: 'They are the reason this theme is public in the first place! Thank you for your contributions.',
-            imageUrl: 'https://i.imgur.com/RbYsuVC.png'
+            imageUrl: 'https://i.imgur.com/wGe1bVV.png'
         },
           {
             id: '668970425',
             text: 'A silly friend that helped me to spot bugs, thanks for giving me your time to test features!',
-            imageUrl: 'https://i.imgur.com/RbYsuVC.png'
+            imageUrl: 'https://i.imgur.com/wGe1bVV.png'
         },
             {
             id: '17037147',
             text: 'This cutie is the sole reason I started to work on myself and create useful things for people, Thank you M.',
-            imageUrl: 'https://i.imgur.com/qbCBdN8.png'
+            imageUrl: 'https://i.imgur.com/wGe1bVV.png'
         },
         {
             id: '20998101',
             text: 'Vee! Thank you for using my theme.',
-            imageUrl: 'https://i.imgur.com/qbCBdN8.png'
+            imageUrl: 'https://i.imgur.com/wGe1bVV.png'
         },
     ];
 
