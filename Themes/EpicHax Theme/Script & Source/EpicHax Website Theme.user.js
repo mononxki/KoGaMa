@@ -26,6 +26,12 @@ a[href="/subscription/subscribe/"] {
   display:none;
 }
 
+a[href="/videos/"] {
+	display: none;
+}
+a[href="/leaderboard/"] {
+	display: none;
+}
 a[href="/purchase/"] {
 	display: none;
 }
