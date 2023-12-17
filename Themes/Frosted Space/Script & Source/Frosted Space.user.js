@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         KoGaMa Theme: Frosted Space
 // @namespace    
-// @version      3.4
-// @description  Simple theme for KoGaMa.
+// @version      3.5
+// @description  Simple theme for KoGaMa
 // @author       Mercury, ILoveCry, FullTimeRed
 // @match        https://www.kogama.com/*
 // @match        https://friends.kogama.com/*
@@ -192,7 +192,7 @@ body#root-page-mobile header#pageheader #meta-nav>li.xp-level a {
 }
 /* username padding */
 #mobile-page #profile-page .section-top .username {
-	padding-left: 800px;
+	padding-left: 500px;
 }
 /* Description + Creations Properties */
 
@@ -366,34 +366,25 @@ text-transform: none;
 	border: double;
 	border-color: #39a8db;
 }
-/* Feed | Post properties */
-#profile-news-feed ul.news-feed-thumbs>li.item .feed-header .feed-text .user {
-    font-size: 1rem;
-     color: #fff;
-  text-align: center;
-  animation: glow 1s ease-in-out infinite alternate;
+.MuiGrid-spacing-xs-2 > .MuiGrid-item { background-color: transparent; }
+.MuiCard-root { background-color: rgba(182, 202, 207, 0.3) !important; border-radius: 25px !important; backdrop-filter: blur(3px);  }
+@keyframes glow {
+    0% {
+        text-shadow: 0 0 5px rgba(255, 255, 255, 0.8);
+    }
+    50% {
+        text-shadow: 0 0 20px rgba(255, 255, 255, 0.8);
+    }
+    100% {
+        text-shadow: 0 0 5px rgba(255, 255, 255, 0.8);
+    }
 }
-@-webkit-keyframes glow {
-  from {
-    text-shadow: 0 0 10px #fff, 0 0 20px #fff, 0 0 10px #5940ff, 0 0 10px #0077ff, 0 0 10px #ffffff, 0 0 30px #5940ff, 0 0 10px #ffffff;
-  }
-  to {
-    text-shadow: 0 0 10px #fff, 0 0 20px #ffffff, 0 0 10px #ffffff, 0 0 10px #0077ff, 0 0 30px #ffffff, 0 0 10px #0077ff, 0 0 10px #ffffff;
-  }
+
+.MuiTypography-colorPrimary {
+    color: #D3EFEE !important;
+    animation: glow 2s infinite; /* Adjust the duration as needed */
 }
-#profile-news-feed ul.news-feed-thumbs>li.item.status_updated .feed-item .status-message, #profile-news-feed ul.news-feed-thumbs>li.item.wall_post .feed-item .status-message {
-	color: #562bba;
-    	  animation: glow 1s ease-in-out infinite alternate;
-}
-@-webkit-keyframes glow {
-  from {
-    text-shadow: 0 0 10px #fff, 0 0 10px #fff, 0 0 10px #ffffff, 0 0 10px #ffffff, 0 0 10px #ffffff, 0 0 10px #ffffff, 0 0 10px #ffffff;
-  }
-  to {
-    text-shadow: 0 0 10px #fff, 0 0 10px #ffffff, 0 0 10px #ffffff, 0 0 10px #ffffff, 0 0 10px #ffffff, 0 0 10px #ffffff, 0 0 10px #ffffff;
-  }
-}
-}
+
 
 }
 #profile-news-feed ul.news-feed-thumbs>li.item.status_updated .feed-item .status-message,#profile-news-feed ul.news-feed-thumbs>li.item.wall_post .feed-item .status-message {
@@ -505,23 +496,27 @@ body#root-page-mobile header#pageheader .logo .logo-image {
     display: none;
 }
 #mobile-page #profile-page .section-top .progression .level {
-   margin-left: 180px;
+   margin-left: 191px;
+   margin-bottom: 110px;
+
    border-radius: 25px;
+   background-color: transparent;
+   border: none;
+   box-shadow: none;
 }
-#mobile-page #profile-page .section-top .progression .level img {
-}
+
 /* Profile Progression  padding | Font   */
 	   /* gold */
 	#mobile-page #profile-page .section-top .progression .gold {
-    padding: 2 0 0 50.1rem;
+    padding: 1 0 0 70.1rem;
 	}
 	/* friends */
 	#mobile-page #profile-page .section-top .progression .friends {
-    padding: 0 0 0 50.475rem;
+    padding: 1 0 0 44.475rem;
 	}
 	/* Ranking */
 	#mobile-page #profile-page .section-top .progression .rank {
-     padding: 0 0 0 33.975rem;
+     padding: 0 0 0 23.975rem;
 }
 #mobile-page #profile-page .section-top .profile-badges .profile-badge-list {
     position: absolute;
@@ -1188,53 +1183,155 @@ display: none
 	background-color: hsl(209, 63%, 59%);
     color: #e1edec;
 }
-#mobile-page #profile-page .section-top .username h2 a {
-  overflow: hidden; /* Ensures the content is not revealed until the animation */
-  border-right: .15em solid orange; /* The typwriter cursor */
-  white-space: nowrap; /* Keeps the content on a single line */
-  margin: 0 auto; /* Gives that scrolling effect as the typing happens */
-  letter-spacing: .15em; /* Adjust as needed */
-  animation:
-    typing 3.5s steps(40, end),
-    blink-caret .75s step-end infinite;
+
+
+
+._2ycRP { display: none; }
+
+
+@import url('https://fonts.googleapis.com/css2?family=Sometype+Mono&display=swap');
+@keyframes glowing {
+  0% {
+    text-shadow: 0 0 2px #fff, 0 0 5px #ffffff, 0 0 7px #fff;
+  }
+  50% {
+    text-shadow: 0 0 2px #fff, 0 0 5px #ffffff, 0 0 7px #fff;
+  }
+  100% {
+    text-shadow: 0 0 2px #fff, 0 0 5px #ffffff, 0 0 7px #fff;
+  }
 }
 
-/* The typing effect */
-@keyframes typing {
-  from { width: 0 }
-  to { width: 100% }
+/* Define the keyframe for the typewriter effect */
+@keyframes typewriter {
+  from {
+    width: 0;
+  }
+  to {
+    width: 100%;
+  }
 }
 
-/* The typewriter cursor effect */
+/* Apply the typewriter animation and the glow effect */
+.username h1 a {
+    display: inline-block;
+    overflow: hidden;
+    white-space: nowrap;
+    margin: 0 auto;
+    padding: 0;
+    color: white;
+    font-family: 'Sometype Mono', monospace;
+    font-size: 24px; /* Stable font size */
+    letter-spacing: 0.15em; /* Adjust as needed */
+    position: relative;
+    animation: typewriter 5.5s steps(40, end) forwards, glow 1s infinite; /* Combining typewriter and glow animations */
+}
+
+/* The blinking cursor effect */
+.blinking-cursor {
+  display: inline-block;
+  height: 1em; /* Adjust the height of the cursor */
+  width: 0.15em;
+  background-color: orange; /* Initial color of the blinking cursor */
+  animation: blink-caret 0.75s step-end 3s, blink-caret-infinite 0.75s step-end infinite; /* Cursor animation without forwards */
+}
+
+/* The blinking cursor effect after reaching the end */
 @keyframes blink-caret {
-  from, to { border-color: transparent }
-  50% { border-color: orange; }
+  from, to {
+    background-color: transparent;
+  }
+  50% {
+    background-color: orange;
+  }
+}
+
+/* The infinite blinking cursor effect */
+@keyframes blink-caret-infinite {
+  0%, 100% {
+    background-color: orange;
+  }
+  50% {
+    background-color: transparent;
+  }
 }
 
 
 
-#mobile-page #profile-page .section-top .username h2 {
-  overflow: hidden; /* Ensures the content is not revealed until the animation */
-  border-right: .5em solid transparent; /* The typwriter cursor */
-  white-space: nowrap; /* Keeps the content on a single line */
-  margin: 0 auto; /* Gives that scrolling effect as the typing happens */
-  letter-spacing: .15em; /* Adjust as needed */
-  animation:
-    typing 3.5s steps(40, end),
-    blink-caret .75s step-end infinite;
+/* Style the tooltip if needed */
+.tool-tip {
+  position: relative;
+  text-decoration: none;
+  color: #333; /* Adjust the color to your preference */
 }
 
-/* The typing effect */
-@keyframes typing {
-  from { width: 0 }
-  to { width: 100% }
+.tool-tip::before {
+  content: attr(data-original-title);
+  position: absolute;
+  background: #333; /* Adjust the background color to your preference */
+  color: #fff; /* Adjust the text color to your preference */
+  padding: 4px 8px;
+  border-radius: 4px;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
 }
 
-/* The typewriter cursor effect */
+.tool-tip:hover::before {
+  opacity: 1;
+}
+
+/* Apply the typewriter animation and the glow effect */
+#mobile-page #profile-page .section-top .username h1 {
+    display: inline-block;
+    overflow: hidden;
+    white-space: nowrap;
+    margin: 0 auto;
+    padding: 0;
+    color: white;
+    font-family: 'Sometype Mono', monospace;
+    font-size: 24px; /* Stable font size */
+    letter-spacing: 0.15em; /* Adjust as needed */
+    position: relative;
+    animation: typewriter 5.5s steps(40, end) forwards, glow 1s infinite; /* Combining typewriter and glow animations */
+}
+
+/* The blinking cursor effect */
+#mobile-page #profile-page .section-top .username h1 .blinking-cursor {
+    display: inline-block;
+    height: 1em; /* Adjust the height of the cursor */
+    width: 0.15em;
+    background-color: white; /* Initial color of the blinking cursor */
+    animation: blink-caret 0.75s step-end 3s, blink-caret-infinite 0.75s step-end infinite; /* Cursor animation without forwards */
+}
+
+/* The blinking cursor effect after reaching the end */
 @keyframes blink-caret {
-  from, to { border-color: transparent }
-  50% { border-color: royal; }
+    from, to {
+        background-color: transparent;
+    }
+    50% {
+        background-color: white;
+    }
 }
+
+/* The infinite blinking cursor effect */
+@keyframes blink-caret-infinite {
+    0%, 100% {
+        background-color: white;
+    }
+    50% {
+        background-color: transparent;
+    }
+}
+
+
+
+
+
 
 
 
