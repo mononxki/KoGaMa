@@ -1,0 +1,30 @@
+/* Site Prefix */
+
+        /* font import */
+        @import url('https://fonts.googleapis.com/css2?family=Comfortaa:wght@300&family=Handlee&family=Indie+Flower&display=swap');
+        
+
+
+
+/*Site Visuals - Background Image */
+
+#root-page-mobile #content #content-container { background-image: url('https://i.imgur.com/9RllRlr.jpg'); background-position: center;  background-repeat: no-repeat; background-attachment: fixed; background-size: cover; ;}
+#mobile-page .content-content { background-image: url('https://i.imgur.com/9RllRlr.jpg'); background-position: center;  background-repeat: no-repeat; background-attachment: fixed; background-size: cover; ;}
+#root-page-mobile #content.authenticated #content-container #main-content { background-image: url('https://i.imgur.com/9RllRlr.jpg'); background-position: center;  background-repeat: no-repeat; background-attachment: fixed; background-size: cover ;}
+._3TORb { background-color: #1a1a1a29;  }
+
+/* Site Visuals - Profile Feed */ 
+
+
+
+
+    /* Site Visuals - Friendslist */ 
+
+body#root-page-mobile header#pageheader nav.menu {
+position: relative;
+ left: 780px;
+}
+body#root-page-mobile header#pageheader .logo .logo-image { display: none; }
+/* footers & annoying things that should not exist */
+
+footer #footer-links, footer #footer-about, footer #footer-company, footer #footer-header { display: none; }
