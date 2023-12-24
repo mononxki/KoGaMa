@@ -1,12 +1,17 @@
 // ==UserScript==
-// @name         PrivateGameTab
+// @name         KoGaMa: Minimal Gamelist
 // @namespace    github.com/zombieaztro
-// @version      2.0
+// @version      2.3
 // @description  Define your custom games tab.
 // @author       zombieaztro
 // @match        https://www.kogama.com/games/
-// @grant        none
+// @grant        GM_addStyle
 // ==/UserScript==
+
+GM_addStyle(`
+@import url('https://fonts.googleapis.com/css2?family=Comfortaa&display=swap');
+* { font-family: 'Comfortaa', sans-serif; }
+`);
 
 (function() {
     'use strict';
@@ -16,35 +21,68 @@
         mobilePageContent.style.display = 'none';
     }
 
-    const elementsList = [
-        { imageSrc: 'https://www.kogstatic.com/gen_cache/93/9f/939ff8169cf949abbb621ac82870215a_600x240.jpg', title: '> WAR 4 < ', creator: 'opnfeniks', content: '#FAV', link: 'https://www.kogama.com/games/play/2593313/' },
-        { imageSrc: 'https://www.kogstatic.com/gen_cache/2e/42/2e420947-da3c-40c0-8e63-858c0c38cf7e_600x240.jpg', title: 'G4 | Versión de Br (Rail)', creator: 'Amoreii-', content: '#1V1', link: 'https://www.kogama.com/games/play/9618799/' },
-        { imageSrc: 'https://www.kogstatic.com/gen_cache/d5/03/d503bbec-2fc4-4b9e-a922-b16d83cf12b9_600x240.jpg', title: '|The Parkour| (212Lvls)', creator: '-_Chrupcio_-', content: '#Relaxation', link: 'https://www.kogama.com/games/play/7307232/' },
-        { imageSrc: 'https://www.kogstatic.com/gen_cache/e3/32/e3326930-b04a-4a91-8493-daa8fbabbe14_600x240.jpg', title: 'Ƹ̵̡Ӝ̵̨̄Ʒ| Just a parkour |Ƹ̵̡Ӝ̵̨̄Ʒ', creator: 'Marcel', content: '#Relaxation', link: 'https://www.kogama.com/games/play/7853864/' },
-        { imageSrc: 'https://www.kogstatic.com/gen_cache/4f/fd/4ffd674d-974e-4423-9f5c-20f3194021df_600x240.jpg', title: 'Mech-Hard', creator: '_Kelim_', content: '#Relaxation', link: 'https://www.kogama.com/games/play/6068850/' },
-        { imageSrc: 'https://www.kogstatic.com/gen_cache/ae/7c/ae7c18f4-eae5-4a76-86db-da9562a12f21_600x240.jpg', title: 'g', creator: 'Marcel', content: '#funny', link: 'https://www.kogama.com/games/play/10381736/' },
-    ];
+    function fetchPlainText(url) {
+        return fetch(url)
+            .then(response => response.text());
+    }
 
-    const customDiv = document.createElement('div');
-    customDiv.style.position = 'fixed';
-    customDiv.style.top = '50%';
-    customDiv.style.left = '50%';
-    customDiv.style.transform = 'translate(-50%, -50%)';
-    customDiv.style.backgroundColor = 'transparent';
-    customDiv.style.padding = '30px';
-    customDiv.style.zIndex = '1000';
-    customDiv.style.width = '100%';
-    customDiv.style.height = '100%';
+    fetchPlainText('https://raw.githubusercontent.com/zombieaztro/KoGaMa/main/Plugins/Addons/BetterGames/JSON/main.json').then(text => {
+        const elementsList = JSON.parse(text);
 
-    const centeredList = document.createElement('div');
-    centeredList.style.position = 'absolute';
-    centeredList.style.top = '15%';
-    centeredList.style.left = '14%';
-    centeredList.style.display = 'grid';
-    centeredList.style.gridTemplateColumns = 'repeat(2, 1fr)';
-    centeredList.style.gap = '50px';
+        const customDiv = document.createElement('div');
+        customDiv.style.position = 'fixed';
+        customDiv.style.top = '80%';
+        customDiv.style.left = '51%';
+        customDiv.style.transform = 'translate(-50%, -50%)';
+        customDiv.style.backgroundColor = 'transparent';
+        customDiv.style.padding = '30px';
+        customDiv.style.zIndex = '1000';
+        customDiv.style.width = '100%';
+        customDiv.style.height = '100%';
 
-    elementsList.forEach(elementData => {
+        const columnContainer = document.createElement('div');
+        columnContainer.style.display = 'flex';
+        columnContainer.style.justifyContent = 'space-between';
+        columnContainer.style.flexWrap = 'none';
+        columnContainer.style.gap = '33px'; // Adjust this value as needed
+        columnContainer.style.maxWidth = '1015px'; // Set a maximum width for columns
+
+        const sortedGames = {};
+
+        elementsList.forEach(elementData => {
+            const contentTags = elementData.content.split(' ');
+            contentTags.forEach(tag => {
+                if (!sortedGames[tag]) {
+                    sortedGames[tag] = [];
+                }
+                sortedGames[tag].push(elementData);
+            });
+        });
+
+        Object.keys(sortedGames).forEach(tag => {
+            const column = document.createElement('div');
+            column.style.display = 'flex';
+            column.style.flexDirection = 'column';
+            column.style.marginBottom = '10px'; 
+
+            sortedGames[tag].forEach(game => {
+                createGameEntry(game, column);
+            });
+
+            columnContainer.appendChild(column);
+        });
+
+        customDiv.appendChild(columnContainer);
+
+        const specifiedElement = document.querySelector('#root-page-mobile #content.authenticated #content-container #main-content');
+        if (specifiedElement) {
+            specifiedElement.appendChild(customDiv);
+        } else {
+            document.body.appendChild(customDiv);
+        }
+    });
+
+    function createGameEntry(elementData, parentElement) {
         const linkElement = document.createElement('a');
         linkElement.href = elementData.link;
         linkElement.target = '_blank';
@@ -55,23 +93,23 @@
         element.style.padding = '10px';
         element.style.display = 'flex';
         element.style.flexDirection = 'column';
-        element.style.backgroundImage = `url(${elementData.imageSrc})`;
+        element.style.backgroundImage = `linear-gradient(to right, rgba(0,0,0,0.8), rgba(0,0,0,0.3)), url(${elementData.imageSrc})`;
         element.style.backgroundSize = 'cover';
         element.style.boxShadow = '0 0 3px black';
         element.style.color = '#ffffff';
         element.style.width = '400px';
         element.style.height = '129px';
-        element.style.textShadow = '1px 1px 1px rgba(0, 0, 0, 0.5)';
+        element.style.textShadow = '0 0 2px #fff';
         element.style.transition = 'transform 0.3s ease-in-out, z-index 0.3s ease-in-out';
 
         element.addEventListener('mouseenter', () => {
             element.style.transform = 'scale(1.3)';
-            element.style.zIndex = '1';
+            element.style.zIndex = '99999'; 
         });
 
         element.addEventListener('mouseleave', () => {
             element.style.transform = 'scale(1)';
-            element.style.zIndex = '0';
+            element.style.zIndex = '1';
         });
 
         const textDiv = document.createElement('div');
@@ -124,16 +162,7 @@
         textDiv.appendChild(buttonL);
 
         linkElement.appendChild(element);
-        centeredList.appendChild(linkElement);
-    });
-
-    customDiv.appendChild(centeredList);
-
-    const specifiedElement = document.querySelector('#root-page-mobile #content.authenticated #content-container #main-content');
-    if (specifiedElement) {
-        specifiedElement.appendChild(customDiv);
-    } else {
-        document.body.appendChild(customDiv);
+        parentElement.appendChild(linkElement);
     }
 
     function createButton(iconUrl, clickEvent) {
