@@ -5,7 +5,7 @@
 // @description  Stop playing addictive games!
 // @author      zombieaztro
 // @match        https://www.kogama.com/*
-// @icon         https://i.imgur.com/7w8U9lo.png
+// @icon         https://i.imgur.com/37qk3s1.png
 // @grant        GM_addStyle
 // ==/UserScript==
 
