@@ -32,7 +32,7 @@ GM_addStyle(`
         const customDiv = document.createElement('div');
         customDiv.style.position = 'fixed';
         customDiv.style.top = '80%';
-        customDiv.style.left = '51%';
+        customDiv.style.left = '62%';
         customDiv.style.transform = 'translate(-50%, -50%)';
         customDiv.style.backgroundColor = 'transparent';
         customDiv.style.padding = '30px';
@@ -44,8 +44,8 @@ GM_addStyle(`
         columnContainer.style.display = 'flex';
         columnContainer.style.justifyContent = 'space-between';
         columnContainer.style.flexWrap = 'none';
-        columnContainer.style.gap = '33px'; // Adjust this value as needed
-        columnContainer.style.maxWidth = '1015px'; // Set a maximum width for columns
+        columnContainer.style.gap = '33px'; 
+        columnContainer.style.maxWidth = '1015px'; 
 
         const sortedGames = {};
 
