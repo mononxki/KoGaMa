@@ -16,7 +16,7 @@
         const bioText = document.querySelector('.description-container .text');
         if (!bioText) return;
 
-        const imgurImageUrl = 'https://i.imgur.com/OyBdq6i.png';
+        const imgurImageUrl = 'https://i.imgur.com/KvzzqBF.png';
 
         const copyButton = createImgurButton(imgurImageUrl, function() {
             const textToCopy = bioText.innerText;
@@ -43,8 +43,8 @@
         copyButton.style.height = '24px';
         copyButton.style.marginRight = '10px';
         copyButton.style.cursor = 'pointer';
-        copyButton.style.opacity = '0';
-        copyButton.style.transition = 'opacity 0.3s';
+        copyButton.style.opacity = '0.4';
+        copyButton.style.transition = 'opacity 0.6s';
         copyButton.style.verticalAlign = 'middle';
         copyButton.addEventListener('click', clickAction);
 
