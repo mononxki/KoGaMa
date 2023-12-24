@@ -20,7 +20,7 @@
         const replyButton = document.createElement("img"); 
         replyButton.className = "reply-button";
         replyButton.style.cursor = "pointer";
-        replyButton.src = "https://i.imgur.com/GwWM5z4.png"; 
+        replyButton.src = "https://i.imgur.com/PUMZG8i.png"; 
 
         const replyContainer = document.createElement("div");
         replyContainer.className = "reply-container";
