@@ -209,7 +209,7 @@ injectCss("Pararell",`
 
     /* Site Background Image */
 #content-container{
-  background-image: url("https://i.imgur.com/rbnI6EU.png");
+  background-image: url("https://i.imgur.com/37qk3s1.png");
   background-position: center;
   background-repeat: no-repeat;
   background-attachment: fixed;
@@ -218,7 +218,7 @@ injectCss("Pararell",`
 }
 
 body#root-page-mobile.error {
-	 background-image: url("https://i.imgur.com/rbnI6EU.png");
+	 background-image: url("https://i.imgur.com/37qk3s1.png");
   background-position: center;
   background-repeat: no-repeat;
   background-attachment: fixed;
@@ -226,7 +226,7 @@ body#root-page-mobile.error {
   height: 100%;
 }
 body#root-page-mobile {
-	 background-image: url("https://i.imgur.com/rbnI6EU.png");
+	 background-image: url("https://i.imgur.com/37qk3s1.png");
   background-position: center;
   background-repeat: no-repeat;
   background-attachment: fixed;
