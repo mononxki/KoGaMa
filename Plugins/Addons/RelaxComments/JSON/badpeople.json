@@ -1,20 +1,18 @@
 {
-  "inappropriateWords": [
-    "porn",
-    "sex",
-    "masturbation",
-    "pussy",
-    "anal",
-    "deepthroat",
-    "naked",
-    "nigger",
-    "niggers",
-    "fuck",
-    "gay",
-    "pedophile",
-    "bitch",
-    "whore",
-    "cunt",
-    "nigge"
-  ]
+  "porn": true,
+  "sex": true,
+  "masturbation": true,
+  "pussy": true,
+  "anal": true,
+  "deepthroat": true,
+  "naked": true,
+  "nigger": true,
+  "niggers": true,
+  "fuck": true,
+  "gay": true,
+  "pedophile": true,
+  "bitch": true,
+  "whore": true,
+  "cunt": true,
+  "nigge": true
 }
