@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Custom Profile Backgrounds - AZTRO_FIX
-// @version      0.4
+// @version      1.1
 // @author       Devork, zombieastro
 // @description  KoGaMa Custom Profile Background Support.
 // @namespace    https://github.com/Devorkk/
@@ -10,6 +10,7 @@
 // @run-at       document-start
 // @grant        none
 // ==/UserScript==
+
 const InsertBeforeLoad = async () => {
   const DESCRIPTION_TEXT = document.querySelector('#description-extend > div > div.text').innerHTML;
   const BACKGROUND_AVATAR = document.querySelector('.background-avatar');
@@ -22,8 +23,19 @@ const InsertBeforeLoad = async () => {
       const gameId = BACKGROUND_DETAILS[1];
       const imageSrc = await fetchImageSource(gameId);
 
-      BACKGROUND_AVATAR.style.transition = 'background-image 0.3s ease-in';
-        BACKGROUND_SECTION.style.transition = 'background-image 0.3s ease-in';
+
+      BACKGROUND_AVATAR.style.transition = 'opacity 0.3s ease-in';
+      BACKGROUND_AVATAR.style.opacity = '0';
+
+      BACKGROUND_SECTION.style.transition = 'opacity 0.3s ease-in';
+      BACKGROUND_SECTION.style.opacity = '0';
+
+
+      setTimeout(() => {
+        BACKGROUND_AVATAR.style.opacity = '1';
+        BACKGROUND_SECTION.style.opacity = '1';
+      }, 1000);
+
       BACKGROUND_AVATAR.style.backgroundImage = `url(${imageSrc})`;
 
       switch (BACKGROUND_DETAILS[2]) {
@@ -68,5 +80,3 @@ async function fetchImageSource(gameId) {
 }
 
 document.addEventListener('DOMContentLoaded', InsertBeforeLoad);
-
-
