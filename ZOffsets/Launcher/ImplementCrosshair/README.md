@@ -4,7 +4,9 @@
 
 Remember that tweaking game files or using any sort of modification to gain advantage will result in your ban if you get reported.
 
-✨ I do not take any responsibility for what happens to your account. ✨
+✨ <ins>I do not take any responsibility for what happens to your account.</ins>✨
+
+[THE GUIDANCE BELOW IS OUTDATED: CHECK THIS VIDEO](https://youtu.be/iwUM8oK7Mes)
 
 
 
@@ -61,6 +63,6 @@ You can now head back to the KoGaMaData directory (`\KogamaLauncher-WWW\Launcher
 
 After joining a game, your crosshair should be whatever you made it.
 
-> If you encounter any language issues, here is a [video format guide](https://youtu.be/cCS6wZViIzo).
+> If you encounter any language issues, here is a [video format guide](https://youtu.be/iwUM8oK7Mes).
 
 ![Image](https://user-images.githubusercontent.com/96681438/226177170-a8dd97b4-9842-441c-a2c9-fa9e0aca0f38.png)
