@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         KoGaMa theme: EpicHax
 // @namespace    Dark-Green theme with glowing features, fancy.
-// @version      0.9.3
+// @version      0.9.4
 // @description  This theme is based on an EpicHax presentation by DanieL and Short CSS snippet by Devorkk to follow it up.
 // @author       Simon, DanieL, Devorkk
 // @match        https://www.kogama.com/*
@@ -22,9 +22,9 @@ GM_addStyle(`
 (function() {
     'use strict';
   function isKogamaGamesURL() {
-        return window.location.href.startsWith('https://www.kogama.com/games/');
+        // Check if the URL matches exactly 'https://www.kogama.com/games/'
+        return window.location.href === 'https://www.kogama.com/games/';
     }
-
 
     if (!isKogamaGamesURL()) {
         return;
