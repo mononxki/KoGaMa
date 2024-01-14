@@ -9,10 +9,10 @@
 // @match        https://www.kogama.com/profile/*/marketplace/model/*
 // @grant        GM_addStyle
 // ==/UserScript==
- 
+ // MARKETPLACE ITEM PREVIEW
 (function () {
     'use strict';
- 
+
     GM_addStyle(`
         .overlay-container {
             display: none;
@@ -26,21 +26,21 @@
             justify-content: center;
             align-items: center;
         }
- 
+
         .image-container {
             position: relative;
-            width: 90%; 
-            height: 90%; 
+            width: 90%;
+            height: 90%;
             border-radius: 10px;
             overflow: hidden;
             display: flex;
             justify-content: center;
             align-items: center;
-            z-index: 10000; 
+            z-index: 10000;
         }
- 
- 
- 
+
+
+
         .link-button {
             position: absolute;
             bottom: 74px;
@@ -49,46 +49,46 @@
             width: 180px;
             height: 45px;
              white-space: nowrap;
-            background-color:#a83240;
+            background-color: #3EAA5A;
             color: #fff;
             border: none;
             border-radius: 5px;
             cursor: pointer;
            text-align: center;
-            z-index: 10001; 
+            z-index: 10001;
             transition: all  0.7s ease-in-out;
-            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.3); 
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.3);
         }
          .link-button:hover {
-         background-color:#c71e32;
-         box-shadow: 0px 0px 15px #f25567;
- 
+         background-color:# 63AA75;
+         box-shadow: 0px 0px 15px #66EE88;
+
          }
     `);
- 
+
     function extractImageUrl(element) {
         const backgroundImage = element.style.backgroundImage;
         return backgroundImage.replace(/url\(['"]?(.*?)['"]?\)/, '$1');
     }
- 
+
     function createViewOverlay(imageUrl) {
         const overlayContainer = document.createElement('div');
         overlayContainer.classList.add('overlay-container');
- 
+
         const imageContainer = document.createElement('div');
         imageContainer.classList.add('image-container');
- 
+
         const closeButton = document.createElement('div');
         closeButton.classList.add('close-button');
         closeButton.addEventListener('click', function () {
             overlayContainer.style.display = 'none';
         });
- 
+
         const img = document.createElement('img');
         img.src = imageUrl;
         img.style.maxWidth = '100%';
         img.style.maxHeight = '100%';
- 
+
         const linkButton = document.createElement('button');
         linkButton.classList.add('link-button');
         linkButton.textContent = 'Copy Link';
@@ -96,42 +96,42 @@
             event.stopPropagation();
             copyToClipboard(imageUrl);
         });
- 
+
         imageContainer.appendChild(closeButton);
         imageContainer.appendChild(img);
         overlayContainer.appendChild(imageContainer);
         overlayContainer.appendChild(linkButton);
         document.body.appendChild(overlayContainer);
- 
+
         overlayContainer.addEventListener('click', function () {
             overlayContainer.style.display = 'none';
         });
- 
+
         overlayContainer.style.display = 'flex';
     }
- 
+
     function createViewButton(shopItem) {
         const viewButton = document.createElement('button');
         viewButton.style.position = 'absolute';
         viewButton.style.top = '5px';
         viewButton.style.right = '15px';
-        viewButton.style.zIndex = '97'; 
+        viewButton.style.zIndex = '97';
         viewButton.style.width = '32px';
         viewButton.style.height = '32px';
         viewButton.style.background = 'url(https://i.imgur.com/vQtwuy7.png) center/cover no-repeat';
- 
+
         viewButton.addEventListener('click', function (event) {
-            event.stopPropagation(); 
+            event.stopPropagation();
             const imageUrl = extractImageUrl(shopItem.querySelector('.shop-image'));
             createViewOverlay(imageUrl);
         });
- 
+
         shopItem.appendChild(viewButton);
     }
- 
+
     function processShopItems() {
         const shopItems = document.querySelectorAll('.shop-item');
- 
+
         shopItems.forEach((shopItem) => {
             if (!shopItem.classList.contains('image-viewer-added')) {
                 createViewButton(shopItem);
@@ -139,7 +139,7 @@
             }
         });
     }
- 
+
     function copyToClipboard(text) {
         const textField = document.createElement('textarea');
         textField.value = text;
@@ -148,8 +148,8 @@
         document.execCommand('copy');
         document.body.removeChild(textField);
     }
- 
+
     processShopItems();
- 
+
     setInterval(processShopItems, 500);
-})();
+    })();
