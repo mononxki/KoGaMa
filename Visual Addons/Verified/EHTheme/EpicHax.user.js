@@ -1,15 +1,233 @@
 // ==UserScript==
 // @name         KoGaMa theme: EpicHax
 // @namespace    Dark-Green theme with glowing features, fancy.
-// @version      0.7.3
+// @version      0.9.3
 // @description  This theme is based on an EpicHax presentation by DanieL and Short CSS snippet by Devorkk to follow it up.
-// @author      zombieaztro
+// @author       Simon, DanieL, Devorkk
 // @match        https://www.kogama.com/*
 // @match        https://kogama.com.br/*
 // @match        https://friends.kogama.com/*
 // @icon         https://i.pinimg.com/564x/59/d1/21/59d12160b7db286e06f1e0c23eaaa16a.jpg
-// @grant        none
+// @grant        GM_addStyle
+// @grant        GM_xmlhttpRequest
 // ==/UserScript==
+
+GM_addStyle(`
+@import url('https://fonts.googleapis.com/css2?family=Comfortaa&display=swap');
+* { font-family: 'Comfortaa', sans-serif; }
+`);
+
+
+// COMPACT GAMES
+(function() {
+    'use strict';
+  function isKogamaGamesURL() {
+        return window.location.href.startsWith('https://www.kogama.com/games/');
+    }
+
+
+    if (!isKogamaGamesURL()) {
+        return;
+    }
+
+    const mobilePageContent = document.querySelector('#mobile-page .content-content');
+    if (mobilePageContent) {
+        mobilePageContent.style.display = 'none';
+    }
+
+    function fetchPlainText(url) {
+        return fetch(url)
+            .then(response => response.text());
+    }
+
+    fetchPlainText('https://raw.githubusercontent.com/zombieaztro/KoGaMa/main/Plugins/Addons/BetterGames/JSON/main.json').then(text => {
+        const elementsList = JSON.parse(text);
+
+        const customDiv = document.createElement('div');
+        customDiv.style.position = 'fixed';
+        customDiv.style.top = '80%';
+        customDiv.style.left = '56%';
+        customDiv.style.transform = 'translate(-50%, -50%)';
+        customDiv.style.backgroundColor = 'transparent';
+        customDiv.style.padding = '30px';
+        customDiv.style.zIndex = '1000';
+        customDiv.style.width = '100%';
+        customDiv.style.height = '100%';
+
+        const columnContainer = document.createElement('div');
+        columnContainer.style.display = 'flex';
+        columnContainer.style.justifyContent = 'space-between';
+        columnContainer.style.flexWrap = 'none';
+        columnContainer.style.gap = '33px';
+        columnContainer.style.maxWidth = '1015px';
+
+        const sortedGames = {};
+
+        elementsList.forEach(elementData => {
+            const contentTags = elementData.content.split(' ');
+            contentTags.forEach(tag => {
+                if (!sortedGames[tag]) {
+                    sortedGames[tag] = [];
+                }
+                sortedGames[tag].push(elementData);
+            });
+        });
+
+        Object.keys(sortedGames).forEach(tag => {
+            const column = document.createElement('div');
+            column.style.display = 'flex';
+            column.style.flexDirection = 'column';
+            column.style.marginBottom = '10px';
+
+            sortedGames[tag].forEach(game => {
+                createGameEntry(game, column);
+            });
+
+            columnContainer.appendChild(column);
+        });
+
+        customDiv.appendChild(columnContainer);
+
+        const specifiedElement = document.querySelector('#root-page-mobile #content.authenticated #content-container #main-content');
+        if (specifiedElement) {
+            specifiedElement.appendChild(customDiv);
+        } else {
+            document.body.appendChild(customDiv);
+        }
+    });
+
+    function createGameEntry(elementData, parentElement) {
+        const linkElement = document.createElement('a');
+        linkElement.href = elementData.link;
+        linkElement.target = '_blank';
+
+        const element = document.createElement('div');
+        element.style.borderRadius = '13px';
+        element.style.marginBottom = '15px';
+        element.style.padding = '10px';
+        element.style.display = 'flex';
+        element.style.flexDirection = 'column';
+        element.style.backgroundImage = `linear-gradient(to right, rgba(0,0,0,0.8), rgba(0,0,0,0.3)), url(${elementData.imageSrc})`;
+        element.style.backgroundSize = 'cover';
+        element.style.boxShadow = '0 0 3px #2E9E58';
+        element.style.color = '#ffffff';
+        element.style.width = '400px';
+        element.style.height = '129px';
+        element.style.textShadow = '0 0 2px #fff';
+        element.style.transition = 'transform 0.3s ease-in-out, z-index 0.3s ease-in-out';
+
+        element.addEventListener('mouseenter', () => {
+            element.style.transform = 'scale(1.3)';
+            element.style.zIndex = '99999';
+        });
+
+        element.addEventListener('mouseleave', () => {
+            element.style.transform = 'scale(1)';
+            element.style.zIndex = '1';
+        });
+
+        const textDiv = document.createElement('div');
+        textDiv.style.marginTop = '10px';
+        textDiv.style.position = 'relative';
+
+        element.appendChild(textDiv);
+
+        const titleDiv = document.createElement('div');
+        titleDiv.style.display = 'flex';
+        titleDiv.style.flexDirection = 'column';
+        textDiv.appendChild(titleDiv);
+
+        const title = document.createElement('div');
+        title.textContent = elementData.title;
+        title.style.fontWeight = 'bold';
+        titleDiv.appendChild(title);
+
+        const buttonLocal = createButton('https://i.imgur.com/8OVyoMk.png', () => {
+            window.location.href = elementData.link + '?local=1';
+        });
+        buttonLocal.style.borderRadius = '10px';
+        buttonLocal.style.position = 'absolute';
+        buttonLocal.style.bottom = '0';
+        buttonLocal.style.right = '0';
+        titleDiv.appendChild(buttonLocal);
+
+        const creator = document.createElement('div');
+        creator.textContent = elementData.creator;
+        textDiv.appendChild(creator);
+
+        const content = document.createElement('div');
+        content.textContent = elementData.content;
+        textDiv.appendChild(content);
+
+        const buttonW = createButton('https://i.imgur.com/SaTQ4Pm.png', () => {
+            window.location.href = elementData.link + '?webgl=1';
+        });
+        buttonW.style.position = 'absolute';
+        buttonW.style.bottom = '0';
+        buttonW.style.right = '40px';
+        textDiv.appendChild(buttonW);
+
+        const buttonL = createButton('https://i.imgur.com/KLoHal8.png', () => {
+            window.location.href = elementData.link + '?standalone=2';
+        });
+        buttonL.style.position = 'absolute';
+        buttonL.style.bottom = '0';
+        buttonL.style.right = '80px';
+        textDiv.appendChild(buttonL);
+
+        linkElement.appendChild(element);
+        parentElement.appendChild(linkElement);
+    }
+
+    function createButton(iconUrl, clickEvent) {
+        const button = document.createElement('div');
+        button.style.width = '32px';
+        button.style.height = '32px';
+        button.style.borderRadius = '50%';
+        button.style.backgroundImage = `url('${iconUrl}')`;
+        button.style.backgroundSize = 'cover';
+        button.style.cursor = 'pointer';
+        button.addEventListener('click', clickEvent);
+        return button;
+    }
+})();
+
+
+// COMPACT MENU
+    function removeElementsByClass(className){
+        var elements = document.querySelectorAll(className);
+        elements.forEach(function(element) {
+            element.remove();
+        });
+    }
+
+
+    window.addEventListener('load', function() {
+
+        removeElementsByClass('.news');
+        removeElementsByClass('.subscription');
+        removeElementsByClass('.purchase');
+    });
+
+
+    var observer = new MutationObserver(function(mutationsList) {
+        mutationsList.forEach(function(mutation) {
+            if (mutation.type === 'childList') {
+
+                removeElementsByClass('.news');
+                removeElementsByClass('.subscription');
+                removeElementsByClass('.purchase');
+            }
+        });
+    });
+
+
+    var targetNode = document.body;
+    var config = { childList: true, subtree: true };
+
+
+    observer.observe(targetNode, config);
+
 
 
 const injectCss = (id, css) => {
@@ -19,25 +237,486 @@ const injectCss = (id, css) => {
   document.head.appendChild(style);
   return style;
 }
+// MARKETPLACE ITEM PREVIEW
+(function () {
+    'use strict';
+
+    GM_addStyle(`
+        .overlay-container {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 9999; /* Updated z-index to 9999 */
+            background: rgba(0, 0, 0, 0.7); /* Darkened overlay */
+            justify-content: center;
+            align-items: center;
+        }
+
+        .image-container {
+            position: relative;
+            width: 90%;
+            height: 90%;
+            border-radius: 10px;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+        }
+
+
+
+        .link-button {
+            position: absolute;
+            bottom: 74px;
+            right: 50%
+             transform: translateX(50%);
+            width: 180px;
+            height: 45px;
+             white-space: nowrap;
+            background-color: #3EAA5A;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+           text-align: center;
+            z-index: 10001;
+            transition: all  0.7s ease-in-out;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.3);
+        }
+         .link-button:hover {
+         background-color:# 63AA75;
+         box-shadow: 0px 0px 15px #66EE88;
+
+         }
+    `);
+
+    function extractImageUrl(element) {
+        const backgroundImage = element.style.backgroundImage;
+        return backgroundImage.replace(/url\(['"]?(.*?)['"]?\)/, '$1');
+    }
+
+    function createViewOverlay(imageUrl) {
+        const overlayContainer = document.createElement('div');
+        overlayContainer.classList.add('overlay-container');
+
+        const imageContainer = document.createElement('div');
+        imageContainer.classList.add('image-container');
+
+        const closeButton = document.createElement('div');
+        closeButton.classList.add('close-button');
+        closeButton.addEventListener('click', function () {
+            overlayContainer.style.display = 'none';
+        });
+
+        const img = document.createElement('img');
+        img.src = imageUrl;
+        img.style.maxWidth = '100%';
+        img.style.maxHeight = '100%';
+
+        const linkButton = document.createElement('button');
+        linkButton.classList.add('link-button');
+        linkButton.textContent = 'Copy Link';
+        linkButton.addEventListener('click', function (event) {
+            event.stopPropagation();
+            copyToClipboard(imageUrl);
+        });
+
+        imageContainer.appendChild(closeButton);
+        imageContainer.appendChild(img);
+        overlayContainer.appendChild(imageContainer);
+        overlayContainer.appendChild(linkButton);
+        document.body.appendChild(overlayContainer);
+
+        overlayContainer.addEventListener('click', function () {
+            overlayContainer.style.display = 'none';
+        });
+
+        overlayContainer.style.display = 'flex';
+    }
+
+    function createViewButton(shopItem) {
+        const viewButton = document.createElement('button');
+        viewButton.style.position = 'absolute';
+        viewButton.style.top = '5px';
+        viewButton.style.right = '15px';
+        viewButton.style.zIndex = '97';
+        viewButton.style.width = '32px';
+        viewButton.style.height = '32px';
+        viewButton.style.background = 'url(https://i.imgur.com/vQtwuy7.png) center/cover no-repeat';
+
+        viewButton.addEventListener('click', function (event) {
+            event.stopPropagation();
+            const imageUrl = extractImageUrl(shopItem.querySelector('.shop-image'));
+            createViewOverlay(imageUrl);
+        });
+
+        shopItem.appendChild(viewButton);
+    }
+
+    function processShopItems() {
+        const shopItems = document.querySelectorAll('.shop-item');
+
+        shopItems.forEach((shopItem) => {
+            if (!shopItem.classList.contains('image-viewer-added')) {
+                createViewButton(shopItem);
+                shopItem.classList.add('image-viewer-added');
+            }
+        });
+    }
+
+    function copyToClipboard(text) {
+        const textField = document.createElement('textarea');
+        textField.value = text;
+        document.body.appendChild(textField);
+        textField.select();
+        document.execCommand('copy');
+        document.body.removeChild(textField);
+    }
+
+    processShopItems();
+
+    setInterval(processShopItems, 500);
+    })();
+// SEARCH GAMES
+(function () {
+    'use strict';
+  function isKogamaGamesURL() {
+        return window.location.href.startsWith('https://www.kogama.com/games/');
+    }
+
+
+    if (!isKogamaGamesURL()) {
+        return;
+    }
+
+    GM_addStyle(`
+     #gameViewer {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            border-radius: 13px;
+            color: white;
+            z-index: 9999;
+            max-width: 800px;
+            max-height: 500px;
+            overflow: auto;
+            display: none;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: space-between;
+            align-content: start;
+        }
+        .gameItem {
+            width: calc(50% - 5px);
+            margin-bottom: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 10px;
+        }
+        .gameItem img {
+            width: 100%;
+            height: auto;
+            border-radius: 5px;
+        }
+        .gameItem a {
+            flex: 1;
+            color: white;
+            text-decoration: none;
+            text-align: center;
+            margin-top: 10px;
+        }
+        #closeButton {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            cursor: pointer;
+            color: white;
+            background: none;
+            border: none;
+            font-size: 20px;
+        }
+        #openButton {
+            position: fixed;
+            bottom: 10px;
+            left: 10px;
+            z-index: 9999;
+            cursor: pointer;
+            background-color: #2FB953;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 5px 10px;
+        }
+        #overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            z-index: 9998;
+        }
+        #customMenu {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 10000;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            padding: 20px;
+            border-radius: 10px;
+            display: none;
+            flex-direction: column;
+            gap: 10px;
+            align-items: center;
+            justify-content: center;
+        }
+        #customMenu label {
+            color: white;
+        }
+        #customMenu button {
+            cursor: pointer;
+            background-color: black;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 5px 10px;
+        }
+        #customMenu input {
+            padding: 5px;
+            border-radius: 5px;
+        }
+    `);
+
+    let gameViewer;
+    let openButton;
+    let closeButton;
+    let overlay;
+    let customMenu;
+    let searchOptionRadio;
+    let nameInput;
+    let categoryPicker;
+    let pageNumberInput;
+    let confirmButton;
+
+    function createGameViewer() {
+        gameViewer = document.createElement('div');
+        gameViewer.id = 'gameViewer';
+        document.body.appendChild(gameViewer);
+
+        closeButton = document.createElement('button');
+        closeButton.id = 'closeButton';
+        closeButton.innerHTML = '&times;';
+        closeButton.addEventListener('click', closeGameViewer);
+        gameViewer.appendChild(closeButton);
+
+        overlay = document.createElement('div');
+        overlay.id = 'overlay';
+        overlay.addEventListener('click', closeGameViewer);
+        document.body.appendChild(overlay);
+
+        customMenu = document.createElement('div');
+        customMenu.id = 'customMenu';
+        document.body.appendChild(customMenu);
+
+        searchOptionRadio = createRadio('searchOption', [
+            { value: 'byName', label: 'Search by Name' },
+            { value: 'byCategory', label: 'Search by Category' },
+        ]);
+        customMenu.appendChild(searchOptionRadio);
+
+        nameInput = createInput('nameInput', 'Game Title');
+        customMenu.appendChild(nameInput);
+
+        categoryPicker = createSelect('categoryPicker', [
+            { value: 'new', label: 'New' },
+            { value: 'popular', label: 'Popular' },
+        ]);
+        customMenu.appendChild(categoryPicker);
+
+        pageNumberInput = createInput('pageNumberInput', 'Page Number');
+        customMenu.appendChild(pageNumberInput);
+
+        confirmButton = document.createElement('button');
+        confirmButton.textContent = 'Confirm';
+        confirmButton.addEventListener('click', confirmSearch);
+        customMenu.appendChild(confirmButton);
+    }
+
+    function createRadio(name, options) {
+        const radioGroup = document.createElement('div');
+
+        options.forEach((option) => {
+            const radio = document.createElement('input');
+            radio.type = 'radio';
+            radio.name = name;
+            radio.value = option.value;
+            radio.id = `${name}-${option.value}`;
+            radio.addEventListener('change', updateSearchOption);
+
+            const radioLabel = document.createElement('label');
+            radioLabel.textContent = option.label;
+            radioLabel.htmlFor = radio.id;
+
+            radioGroup.appendChild(radio);
+            radioGroup.appendChild(radioLabel);
+        });
+
+        return radioGroup;
+    }
+
+    function updateSearchOption() {
+        const isSearchByName = searchOptionRadio.querySelector('#searchOption-byName').checked;
+        nameInput.style.display = isSearchByName ? 'block' : 'none';
+        categoryPicker.style.display = isSearchByName ? 'none' : 'block';
+    }
+
+    function createInput(id, placeholder) {
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.id = id;
+        input.placeholder = placeholder;
+
+        return input;
+    }
+
+    function createSelect(id, options) {
+        const select = document.createElement('select');
+        select.id = id;
+
+        options.forEach((option) => {
+            const optionElement = document.createElement('option');
+            optionElement.value = option.value;
+            optionElement.text = option.label;
+            select.appendChild(optionElement);
+        });
+
+        return select;
+    }
+
+    function createOpenButton() {
+        openButton = document.createElement('button');
+        openButton.id = 'openButton';
+        openButton.textContent = 'SEARCH';
+
+        openButton.addEventListener('click', openGameViewer);
+        document.body.appendChild(openButton);
+    }
+
+    function openGameViewer() {
+        customMenu.style.display = 'flex';
+        overlay.style.display = 'block';
+    }
+
+    function confirmSearch() {
+        const isSearchByName = searchOptionRadio.querySelector('#searchOption-byName').checked;
+
+        if (isSearchByName) {
+            const gameTitle = nameInput.value;
+            const pageNumber = pageNumberInput.value;
+            sendSearchByNameRequest(gameTitle, pageNumber);
+        } else {
+            const category = categoryPicker.value;
+            const pageNumber = pageNumberInput.value;
+            sendCategoryRequest(category, pageNumber);
+        }
+
+        closeCustomMenu();
+    }
+
+    function closeCustomMenu() {
+        customMenu.style.display = 'none';
+        overlay.style.display = 'none';
+        gameViewer.style.display = 'none';
+    }
+
+    function sendCategoryRequest(category, pageNumber) {
+        const url = `https://www.kogama.com/game/category/${category}/?page=${pageNumber}&count=24`;
+
+        GM_xmlhttpRequest({
+            method: 'GET',
+            url: url,
+            onload: function (response) {
+                const gameData = JSON.parse(response.responseText);
+                displayGames(gameData.data);
+            },
+            onerror: function (error) {
+                console.error('Error fetching game data:', error);
+            },
+        });
+    }
+
+    function sendSearchByNameRequest(gameTitle, pageNumber) {
+        const url = `https://www.kogama.com/game/search/?page=${pageNumber}&count=24&order_by=new&q=${encodeURIComponent(gameTitle)}`;
+
+        GM_xmlhttpRequest({
+            method: 'GET',
+            url: url,
+            onload: function (response) {
+                const gameData = JSON.parse(response.responseText);
+                displayGames(gameData.data);
+            },
+            onerror: function (error) {
+                console.error('Error fetching game data:', error);
+            },
+        });
+    }
+
+function displayGames(games) {
+    gameViewer.innerHTML = '';
+
+    for (let i = 0; i < games.length; i++) {
+        const game = games[i];
+        const gameItem = document.createElement('div');
+        gameItem.className = 'gameItem';
+
+        const img = document.createElement('img');
+        img.src = game.image_medium;
+        img.alt = game.name;
+
+        const name = document.createElement('a');
+        name.href = `https://www.kogama.com/games/play/${game.id}/`;
+        name.textContent = game.name;
+        name.target = '_blank';
+
+        gameItem.appendChild(img);
+        gameItem.appendChild(name);
+
+        gameViewer.appendChild(gameItem);
+    }
+
+    gameViewer.style.display = 'flex';
+    overlay.style.display = 'block';
+}
+
+    function closeGameViewer(event) {
+        if (event && event.target.id === 'overlay') {
+            closeCustomMenu();
+        }
+    }
+
+
+    createGameViewer();
+    createOpenButton();
+})();
 
 
 injectCss("EH Theme",`
-a[href="/subscription/subscribe/"] {
-  display:none;
-}
 
-a[href="/videos/"] {
-	display: none;
-}
-a[href="/leaderboard/"] {
-	display: none;
-}
-a[href="/purchase/"] {
-	display: none;
-}
-a[href="/profile/669471717/edit/"] {
-	 display: inline;
-}
 
   :root {
         --bg: #17181c; /* background */
@@ -108,6 +787,8 @@ text-shadow: 0 0 3px #fff;
 	background-image: var(--bg-dark);
 	border-radius: 25px;
 }
+
+body#root-page-mobile header#pageheader #meta-nav>li.xp-level a { width: 38px; }
 /* login */
 
 .UTtFJ {
@@ -325,43 +1006,6 @@ background: var(--bg-dark);
 }
 
 
-#mobile-page .games-list .game-item .game-name-stats {
-	visibility: visible;
-	border: var(--border);
-	border-radius: 10px;
-	opacity: unset;
-	position: unset;
-	background: var(--bg); }
-
-	#mobile-page .games-list .game-item .game-image {
-		padding-top: 63.42%;
-		margin: -4px -20px;
-		transition: 500ms;
-		background-position: center;
-		border: solid var(--bg) 10px;
-		border-radius: 22px;
-
-	}
-	#mobile-page .games-list .game-item .game-name {
-		color: var(--main);
-		margin: -8px -5px -2px;
-			     text-shadow: 0 0 1px #7bb08b;
-		}
-
-
-.games-stats {
-	font-family: Open Sans, sans-serif;
-	font-weight: 700;
-	color: #e8e8e8;
-	text-align: left;
-	font-size: .75rem;
-	margin: -2px -11px -5px;
-	float: left; color: white; }
-
-
-}
-} .game-item {
-	transform: scale(1); }
 
 #profile-news-feed ul.news-feed-thumbs > li.item, #root-page-mobile #profile-news-feed .feed-comments .comments form textarea, #profile-status-update form.status-message textarea {
 	border-radius: 25px;
@@ -410,9 +1054,6 @@ background: #bf4358;
 	padding-left: 15px;
 }
 
-#mobile-page #game-play section.game-stats-social .like-container {
-	border-radius: 25px;
-}
 
 
 
@@ -820,32 +1461,6 @@ border-radius: 25px;
 }
 
 }`)
-
-// hide stuff
-var link = document.querySelector('a[href="/subscription/subscribe/"]');
-
-link.style.display = 'none';
-
-
-var link2 = document.querySelector('a[href="/help/parents/"]');
-
-link2.style.display = 'none';
-
-var link3 = document.querySelector('a[href="/help/privacy-policy/"]');
-
-link3.style.display = 'none';
-
-var link4 = document.querySelector('a[href="/help/terms-and-conditions/"]');
-
-link4.style.display = 'none';
-
-var link5 = document.querySelector('a[href="/subscription/subscribe/"]');
-
-link5.style.display = 'none';
-
-var link6 = document.querySelector('a[href="/purchase/"]');
-
-link6.style.display = 'none';
 
 
 // console warn
