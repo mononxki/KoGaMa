@@ -8,12 +8,20 @@
 // @grant        GM_xmlhttpRequest
 // @grant        GM_addStyle
 // ==/UserScript==
-
+// SEARCH GAMES
 (function () {
     'use strict';
+  function isKogamaGamesURL() {
+        return window.location.href.startsWith('https://www.kogama.com/games/');
+    }
+
+
+    if (!isKogamaGamesURL()) {
+        return;
+    }
 
     GM_addStyle(`
-        #gameViewer {
+     #gameViewer {
             position: fixed;
             top: 50%;
             left: 50%;
@@ -72,7 +80,7 @@
             left: 10px;
             z-index: 9999;
             cursor: pointer;
-            background-color: black;
+            background-color: #2FB953;
             color: white;
             border: none;
             border-radius: 5px;
@@ -88,12 +96,49 @@
             display: none;
             z-index: 9998;
         }
+        #customMenu {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 10000;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            padding: 20px;
+            border-radius: 10px;
+            display: none;
+            flex-direction: column;
+            gap: 10px;
+            align-items: center;
+            justify-content: center;
+        }
+        #customMenu label {
+            color: white;
+        }
+        #customMenu button {
+            cursor: pointer;
+            background-color: black;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 5px 10px;
+        }
+        #customMenu input {
+            padding: 5px;
+            border-radius: 5px;
+        }
     `);
 
     let gameViewer;
     let openButton;
     let closeButton;
     let overlay;
+    let customMenu;
+    let searchOptionRadio;
+    let nameInput;
+    let categoryPicker;
+    let pageNumberInput;
+    let confirmButton;
 
     function createGameViewer() {
         gameViewer = document.createElement('div');
@@ -110,29 +155,124 @@
         overlay.id = 'overlay';
         overlay.addEventListener('click', closeGameViewer);
         document.body.appendChild(overlay);
+
+        customMenu = document.createElement('div');
+        customMenu.id = 'customMenu';
+        document.body.appendChild(customMenu);
+
+        searchOptionRadio = createRadio('searchOption', [
+            { value: 'byName', label: 'Search by Name' },
+            { value: 'byCategory', label: 'Search by Category' },
+        ]);
+        customMenu.appendChild(searchOptionRadio);
+
+        nameInput = createInput('nameInput', 'Game Title');
+        customMenu.appendChild(nameInput);
+
+        categoryPicker = createSelect('categoryPicker', [
+            { value: 'new', label: 'New' },
+            { value: 'popular', label: 'Popular' },
+        ]);
+        customMenu.appendChild(categoryPicker);
+
+        pageNumberInput = createInput('pageNumberInput', 'Page Number');
+        customMenu.appendChild(pageNumberInput);
+
+        confirmButton = document.createElement('button');
+        confirmButton.textContent = 'Confirm';
+        confirmButton.addEventListener('click', confirmSearch);
+        customMenu.appendChild(confirmButton);
+    }
+
+    function createRadio(name, options) {
+        const radioGroup = document.createElement('div');
+
+        options.forEach((option) => {
+            const radio = document.createElement('input');
+            radio.type = 'radio';
+            radio.name = name;
+            radio.value = option.value;
+            radio.id = `${name}-${option.value}`;
+            radio.addEventListener('change', updateSearchOption);
+
+            const radioLabel = document.createElement('label');
+            radioLabel.textContent = option.label;
+            radioLabel.htmlFor = radio.id;
+
+            radioGroup.appendChild(radio);
+            radioGroup.appendChild(radioLabel);
+        });
+
+        return radioGroup;
+    }
+
+    function updateSearchOption() {
+        const isSearchByName = searchOptionRadio.querySelector('#searchOption-byName').checked;
+        nameInput.style.display = isSearchByName ? 'block' : 'none';
+        categoryPicker.style.display = isSearchByName ? 'none' : 'block';
+    }
+
+    function createInput(id, placeholder) {
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.id = id;
+        input.placeholder = placeholder;
+
+        return input;
+    }
+
+    function createSelect(id, options) {
+        const select = document.createElement('select');
+        select.id = id;
+
+        options.forEach((option) => {
+            const optionElement = document.createElement('option');
+            optionElement.value = option.value;
+            optionElement.text = option.label;
+            select.appendChild(optionElement);
+        });
+
+        return select;
     }
 
     function createOpenButton() {
         openButton = document.createElement('button');
         openButton.id = 'openButton';
-        openButton.textContent = 'Open Kogama Game Viewer';
+        openButton.textContent = 'SEARCH';
+
         openButton.addEventListener('click', openGameViewer);
         document.body.appendChild(openButton);
     }
 
     function openGameViewer() {
+        customMenu.style.display = 'flex';
         overlay.style.display = 'block';
-        gameViewer.style.display = 'flex';
+    }
 
-        const pageNumber = prompt('Enter the page number:', '1');
+    function confirmSearch() {
+        const isSearchByName = searchOptionRadio.querySelector('#searchOption-byName').checked;
 
-        if (!pageNumber || isNaN(pageNumber)) {
-            console.error('Invalid page number. Exiting script.');
-            closeGameViewer();
-            return;
+        if (isSearchByName) {
+            const gameTitle = nameInput.value;
+            const pageNumber = pageNumberInput.value;
+            sendSearchByNameRequest(gameTitle, pageNumber);
+        } else {
+            const category = categoryPicker.value;
+            const pageNumber = pageNumberInput.value;
+            sendCategoryRequest(category, pageNumber);
         }
 
-        const url = `https://www.kogama.com/game/category/new/?page=${pageNumber}&count=24`;
+        closeCustomMenu();
+    }
+
+    function closeCustomMenu() {
+        customMenu.style.display = 'none';
+        overlay.style.display = 'none';
+        gameViewer.style.display = 'none';
+    }
+
+    function sendCategoryRequest(category, pageNumber) {
+        const url = `https://www.kogama.com/game/category/${category}/?page=${pageNumber}&count=24`;
 
         GM_xmlhttpRequest({
             method: 'GET',
@@ -147,36 +287,57 @@
         });
     }
 
-    function displayGames(games) {
-        gameViewer.innerHTML = ''; // Clear previous content
+    function sendSearchByNameRequest(gameTitle, pageNumber) {
+        const url = `https://www.kogama.com/game/search/?page=${pageNumber}&count=24&order_by=new&q=${encodeURIComponent(gameTitle)}`;
 
-        for (let i = 0; i < games.length; i++) {
-            const game = games[i];
-            const gameItem = document.createElement('div');
-            gameItem.className = 'gameItem';
+        GM_xmlhttpRequest({
+            method: 'GET',
+            url: url,
+            onload: function (response) {
+                const gameData = JSON.parse(response.responseText);
+                displayGames(gameData.data);
+            },
+            onerror: function (error) {
+                console.error('Error fetching game data:', error);
+            },
+        });
+    }
 
-            const img = document.createElement('img');
-            img.src = game.images.medium;
-            img.alt = game.name;
+function displayGames(games) {
+    gameViewer.innerHTML = '';
 
-            const name = document.createElement('a');
-            name.href = `https://www.kogama.com/games/play/${game.id}/`;
-            name.textContent = game.name;
-            name.target = '_blank';
+    for (let i = 0; i < games.length; i++) {
+        const game = games[i];
+        const gameItem = document.createElement('div');
+        gameItem.className = 'gameItem';
 
-            gameItem.appendChild(img);
-            gameItem.appendChild(name);
+        const img = document.createElement('img');
+        img.src = game.image_medium;
+        img.alt = game.name;
 
-            gameViewer.appendChild(gameItem);
+        const name = document.createElement('a');
+        name.href = `https://www.kogama.com/games/play/${game.id}/`;
+        name.textContent = game.name;
+        name.target = '_blank';
+
+        gameItem.appendChild(img);
+        gameItem.appendChild(name);
+
+        gameViewer.appendChild(gameItem);
+    }
+
+    gameViewer.style.display = 'flex';
+    overlay.style.display = 'block';
+}
+
+    function closeGameViewer(event) {
+        if (event && event.target.id === 'overlay') {
+            closeCustomMenu();
         }
     }
 
-    function closeGameViewer() {
-        overlay.style.display = 'none';
-        gameViewer.style.display = 'none';
-    }
 
-    // Initialize the script
     createGameViewer();
     createOpenButton();
 })();
+
