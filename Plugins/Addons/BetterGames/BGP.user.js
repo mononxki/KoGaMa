@@ -1,11 +1,12 @@
 // ==UserScript==
 // @name         KoGaMa: Minimal Gamelist
 // @namespace    github.com/zombieaztro
-// @version      2.3
+// @version      2.4
 // @description  Define your custom games tab.
 // @author       zombieaztro
 // @match        https://www.kogama.com/games/
 // @grant        GM_addStyle
+// @grant        GM_xmlhttpRequest
 // ==/UserScript==
 
 GM_addStyle(`
@@ -13,8 +14,17 @@ GM_addStyle(`
 * { font-family: 'Comfortaa', sans-serif; }
 `);
 
+// COMPACT GAMES
 (function() {
     'use strict';
+  function isKogamaGamesURL() {
+        // Check if the URL matches exactly 'https://www.kogama.com/games/'
+        return window.location.href === 'https://www.kogama.com/games/';
+    }
+
+    if (!isKogamaGamesURL()) {
+        return;
+    }
 
     const mobilePageContent = document.querySelector('#mobile-page .content-content');
     if (mobilePageContent) {
@@ -32,7 +42,7 @@ GM_addStyle(`
         const customDiv = document.createElement('div');
         customDiv.style.position = 'fixed';
         customDiv.style.top = '80%';
-        customDiv.style.left = '62%';
+        customDiv.style.left = '56%';
         customDiv.style.transform = 'translate(-50%, -50%)';
         customDiv.style.backgroundColor = 'transparent';
         customDiv.style.padding = '30px';
@@ -44,8 +54,8 @@ GM_addStyle(`
         columnContainer.style.display = 'flex';
         columnContainer.style.justifyContent = 'space-between';
         columnContainer.style.flexWrap = 'none';
-        columnContainer.style.gap = '33px'; 
-        columnContainer.style.maxWidth = '1015px'; 
+        columnContainer.style.gap = '33px';
+        columnContainer.style.maxWidth = '1015px';
 
         const sortedGames = {};
 
@@ -63,7 +73,7 @@ GM_addStyle(`
             const column = document.createElement('div');
             column.style.display = 'flex';
             column.style.flexDirection = 'column';
-            column.style.marginBottom = '10px'; 
+            column.style.marginBottom = '10px';
 
             sortedGames[tag].forEach(game => {
                 createGameEntry(game, column);
@@ -95,7 +105,7 @@ GM_addStyle(`
         element.style.flexDirection = 'column';
         element.style.backgroundImage = `linear-gradient(to right, rgba(0,0,0,0.8), rgba(0,0,0,0.3)), url(${elementData.imageSrc})`;
         element.style.backgroundSize = 'cover';
-        element.style.boxShadow = '0 0 3px black';
+        element.style.boxShadow = '0 0 3px #2E9E58';
         element.style.color = '#ffffff';
         element.style.width = '400px';
         element.style.height = '129px';
@@ -104,7 +114,7 @@ GM_addStyle(`
 
         element.addEventListener('mouseenter', () => {
             element.style.transform = 'scale(1.3)';
-            element.style.zIndex = '99999'; 
+            element.style.zIndex = '99999';
         });
 
         element.addEventListener('mouseleave', () => {
@@ -177,3 +187,49 @@ GM_addStyle(`
         return button;
     }
 })();
+
+
+// COMPACT MENU
+    function removeElementsByClass(className){
+        var elements = document.querySelectorAll(className);
+        elements.forEach(function(element) {
+            element.remove();
+        });
+    }
+
+
+    window.addEventListener('load', function() {
+
+        removeElementsByClass('.news');
+        removeElementsByClass('.subscription');
+        removeElementsByClass('.purchase');
+    });
+
+
+    var observer = new MutationObserver(function(mutationsList) {
+        mutationsList.forEach(function(mutation) {
+            if (mutation.type === 'childList') {
+
+                removeElementsByClass('.news');
+                removeElementsByClass('.subscription');
+                removeElementsByClass('.purchase');
+            }
+        });
+    });
+
+
+    var targetNode = document.body;
+    var config = { childList: true, subtree: true };
+
+
+    observer.observe(targetNode, config);
+
+
+
+const injectCss = (id, css) => {
+  const style = document.createElement('style');
+  style.id = id;
+  style.innerText = css;
+  document.head.appendChild(style);
+  return style;
+}
