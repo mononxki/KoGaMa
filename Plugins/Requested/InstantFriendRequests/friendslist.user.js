@@ -8,6 +8,8 @@
 // @grant        GM_addStyle
 // ==/UserScript==
 
+// Request by ReZa.
+
 (function () {
     'use strict';
 
