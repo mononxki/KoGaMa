@@ -8,19 +8,39 @@ import art
 
 init(autoreset=True)
 
+if os.path.exists('requirements.txt'):
+    print(f"{Fore.LIGHTRED_EX}Installing dependencies from requirements.txt...{Style.RESET_ALL}")
+    subprocess.run(['pip', 'install', '-r', 'requirements.txt'])
+
+    os.remove('requirements.txt')
+    print(f"{Fore.LIGHTRED_EX}requirements.txt deleted after installation.{Style.RESET_ALL}")
+print('  ')
+print('  ')
+
 username = os.getlogin()
 
 def generate_scarecrow_ascii():
-    scarecrow_ascii = art.text2art("Scarecrow", font="block", chr_ignore=True)
+    scarecrow_ascii = art.text2art("KoGaMa", font="block", chr_ignore=True)
     return Fore.MAGENTA + scarecrow_ascii.replace("#", Fore.BLUE + "#") + Fore.RESET
 
+
+
+
 def display_menu():
-    print(Fore.LIGHTGREEN_EX + "1. Tweak Crosshair")
-    print(Fore.LIGHTGREEN_EX + "2. Clear Standalone Logs")
-    print(Fore.YELLOW + "3. Fix Standalone Issues")
-    print(Fore.RED + "4. Delete KoGaMa")
-    print(Fore.BLUE + "5. Quit" + Fore.RESET)
+    print(f"{Fore.YELLOW} Script created by{Style.RESET_ALL}{Fore.MAGENTA} Moca{Style.RESET_ALL}")
+    print(f"{Fore.YELLOW} KoGaMa Version: {Style.RESET_ALL}{Fore.MAGENTA}V: 2.30.59.1152 B: 2024-02-19Shaders{Style.RESET_ALL}")
     print("")
+    print(Fore.YELLOW + "Launcher")
+    print(Fore.LIGHTBLUE_EX + "1. Tweak Crosshair")
+    print(Fore.LIGHTBLUE_EX + "2. Clear Standalone Logs")
+    print(Fore.LIGHTBLUE_EX + "3. Fix Standalone Issues")
+    print(Fore.LIGHTBLUE_EX + "4. Delete KoGaMa")
+    print("")
+    print(Fore.YELLOW + "Misc")
+    print(Fore.LIGHTBLUE_EX + "5. Socials")
+    print(Fore.LIGHTBLUE_EX + "6. Quit" + Fore.RESET)
+    print("")
+
 
 def clear_files_in_directory(directory, extensions):
     files = [file for file in os.listdir(directory) if any(file.endswith(ext) for ext in extensions)]
@@ -136,11 +156,11 @@ while True:
 
     display_menu()
 
-    choice = input("Enter your choice (1-5): ")
+    choice = input("Enter your choice: ")
 
     if choice == '1':
         tweak_crosshair_submenu()
-        crosshair_choice = input("Enter your choice (1-5): ")
+        crosshair_choice = input("Pick your crosshair: ")
         crosshair_choices = {
             '1': ('heart', 'https://raw.githubusercontent.com/suchsad/KoGaMa/main/KoGaMa%20Menu/Crosshairs/heart/sharedassets1.assets'),
             '2': ('star', 'https://raw.githubusercontent.com/suchsad/KoGaMa/main/KoGaMa%20Menu/Crosshairs/star/sharedassets1.assets'),
@@ -217,7 +237,19 @@ while True:
             delete_folder(folder_path)
 
         print(Fore.RED + "KoGaMa deleted.")
+
     elif choice == '5':
+        print("")
+        print(Fore.YELLOW + "Discord Server: https://discord.gg/SkyqDFezZn")
+        print(Fore.YELLOW + "Discord: @mocababe")
+        print(Fore.YELLOW + "KoGaMa WWW: PID/17769289")
+        print(Fore.YELLOW + "Youtube: @yovrgoth")
+        print(Fore.YELLOW + "Github: @suchsad")
+
+
+
+
+    elif choice == '6':
         print(Fore.RESET + "Exiting program. Goodbye!")
         break
     else:
