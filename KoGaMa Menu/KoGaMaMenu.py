@@ -5,6 +5,8 @@ import requests
 import time
 import shutil
 import art
+import webbrowser
+import psutil
 
 init(autoreset=True)
 
@@ -31,14 +33,15 @@ def display_menu():
     print(f"{Fore.YELLOW} KoGaMa Version: {Style.RESET_ALL}{Fore.MAGENTA}V: 2.30.59.1152 B: 2024-02-19Shaders{Style.RESET_ALL}")
     print("")
     print(Fore.YELLOW + "Launcher")
-    print(Fore.LIGHTBLUE_EX + "1. Tweak Crosshair")
-    print(Fore.LIGHTBLUE_EX + "2. Clear Standalone Logs")
-    print(Fore.LIGHTBLUE_EX + "3. Fix Standalone Issues")
-    print(Fore.LIGHTBLUE_EX + "4. Delete KoGaMa")
+    print(Fore.LIGHTBLUE_EX + "1. Join Session")
+    print(Fore.LIGHTBLUE_EX + "2. Tweak Crosshair")
+    print(Fore.LIGHTBLUE_EX + "3. Clear Standalone Logs")
+    print(Fore.LIGHTBLUE_EX + "4. Fix Standalone Issues")
+    print(Fore.LIGHTBLUE_EX + "5. Delete KoGaMa")
     print("")
     print(Fore.YELLOW + "Misc")
-    print(Fore.LIGHTBLUE_EX + "5. Socials")
-    print(Fore.LIGHTBLUE_EX + "6. Quit" + Fore.RESET)
+    print(Fore.LIGHTBLUE_EX + "6. Socials")
+    print(Fore.LIGHTBLUE_EX + "7. Quit" + Fore.RESET)
     print("")
 
 
@@ -140,6 +143,35 @@ def download_and_overwrite(choice, url):
     else:
         print(f"{Fore.RED}Failed to download file from {url}.{Style.RESET_ALL}")
 
+def join_session_submenu():
+    print("")
+    print(Fore.RED + "Join Session:")
+    print("")
+    print(Fore.LIGHTBLUE_EX + "1. > WAR 4 < ")
+    print(Fore.LIGHTBLUE_EX +  "2. Ultimate Hard Parkour")
+    print(Fore.LIGHTBLUE_EX +  "3. LOL Cube Gun 35!!")
+    print("")
+
+    session_id_mapping = {
+        "> WAR 4 < ": "2593313",
+        "Ultimate Hard Parkour": "4388322",
+        "LOL Cube Gun 35!!": "10370845",
+    }
+
+    try:
+        choice = int(input("Enter the number of the session: "))
+        session_names = list(session_id_mapping.keys())
+        selected_session_name = session_names[choice - 1]
+
+        session_id = session_id_mapping[selected_session_name]
+        session_url = f"https://www.kogama.com/games/play/{session_id}/?standalone=2"
+
+        webbrowser.open(session_url)
+
+
+    except (ValueError, IndexError):
+        print("Invalid choice. Please enter a valid number.")
+
 def tweak_crosshair_submenu():
     print("Choose one of the following options:")
     print(f"{Fore.LIGHTRED_EX}1. Heart")
@@ -159,14 +191,17 @@ while True:
     choice = input("Enter your choice: ")
 
     if choice == '1':
+        join_session_submenu()
+
+    elif choice == '2':
         tweak_crosshair_submenu()
         crosshair_choice = input("Pick your crosshair: ")
         crosshair_choices = {
-            '1': ('heart', 'https://raw.githubusercontent.com/suchsad/KoGaMa/main/KoGaMa%20Menu/Crosshairs/heart/sharedassets1.assets'),
-            '2': ('star', 'https://raw.githubusercontent.com/suchsad/KoGaMa/main/KoGaMa%20Menu/Crosshairs/star/sharedassets1.assets'),
-            '3': ('dot', 'https://raw.githubusercontent.com/suchsad/KoGaMa/main/KoGaMa%20Menu/Crosshairs/dot/sharedassets1.assets'),
-            '4': ('plus_sign', 'https://raw.githubusercontent.com/suchsad/KoGaMa/main/KoGaMa%20Menu/Crosshairs/plus_sign/sharedassets1.assets'),
-            '5': ('plus_sign_v2', 'https://raw.githubusercontent.com/suchsad/KoGaMa/main/KoGaMa%20Menu/Crosshairs/plus_sign2/sharedassets1.assets')
+        '1': ('heart', 'https://raw.githubusercontent.com/suchsad/KoGaMa/main/KoGaMa%20Menu/Crosshairs/heart/sharedassets1.assets'),
+        '2': ('star', 'https://raw.githubusercontent.com/suchsad/KoGaMa/main/KoGaMa%20Menu/Crosshairs/star/sharedassets1.assets'),
+        '3': ('dot', 'https://raw.githubusercontent.com/suchsad/KoGaMa/main/KoGaMa%20Menu/Crosshairs/dot/sharedassets1.assets'),
+        '4': ('plus_sign', 'https://raw.githubusercontent.com/suchsad/KoGaMa/main/KoGaMa%20Menu/Crosshairs/plus_sign/sharedassets1.assets'),
+         '5': ('plus_sign_v2', 'https://raw.githubusercontent.com/suchsad/KoGaMa/main/KoGaMa%20Menu/Crosshairs/plus_sign2/sharedassets1.assets')
         }
 
         crosshair_choice_info = crosshair_choices.get(crosshair_choice)
@@ -187,8 +222,7 @@ while True:
         else:
             print(f"{Fore.RED}Invalid choice. Please choose a number from 1 to 5.{Style.RESET_ALL}")
 
-
-    elif choice == '2':
+    elif choice == '3':
         print(Fore.LIGHTGREEN_EX + "Clearing Standalone Logs...")
         directories = [
             f'C:\\Users\\{username}\\AppData\\LocalLow\\Multiverse ApS\\KoGaMa',
@@ -204,7 +238,7 @@ while True:
                 print(f"Directory not found: {directory}")
 
         print(Fore.LIGHTGREEN_EX + "Standalone Logs cleared.")
-    elif choice == '3':
+    elif choice == '4':
         print(Fore.YELLOW + "Fixing Standalone Issues...")
         user_home = os.path.expanduser("~")
         uninstall_path = [
@@ -217,7 +251,7 @@ while True:
         install_kogama()
 
         print(Fore.YELLOW + "Standalone Issues fixed.")
-    elif choice == '4':
+    elif choice == '5':
         print(Fore.RED + "Deleting KoGaMa...")
         user_home = os.path.expanduser("~")
         appdata_local_path = os.path.join(user_home, "AppData", "Local")
@@ -238,7 +272,7 @@ while True:
 
         print(Fore.RED + "KoGaMa deleted.")
 
-    elif choice == '5':
+    elif choice == '6':
         print("")
         print(Fore.YELLOW + "Discord Server: https://discord.gg/SkyqDFezZn")
         print(Fore.YELLOW + "Discord: @mocababe")
@@ -249,7 +283,7 @@ while True:
 
 
 
-    elif choice == '6':
+    elif choice == '7':
         print(Fore.RESET + "Exiting program. Goodbye!")
         break
     else:
