@@ -5,8 +5,10 @@ import requests
 import time
 import shutil
 import art
+import subprocess
 import webbrowser
-import psutil
+import time
+
 
 init(autoreset=True)
 
@@ -22,15 +24,15 @@ print('  ')
 username = os.getlogin()
 
 def generate_scarecrow_ascii():
-    scarecrow_ascii = art.text2art("KoGaMa", font="block", chr_ignore=True)
-    return Fore.MAGENTA + scarecrow_ascii.replace("#", Fore.BLUE + "#") + Fore.RESET
+    scarecrow_ascii = art.text2art("BuGaMa", font="univers", chr_ignore=True)
+    return Fore.LIGHTMAGENTA_EX + scarecrow_ascii.replace("#", Fore.BLUE + "#") + Fore.RESET
 
 
 
 
 def display_menu():
-    print(f"{Fore.YELLOW} Script created by{Style.RESET_ALL}{Fore.MAGENTA} Moca{Style.RESET_ALL}")
-    print(f"{Fore.YELLOW} KoGaMa Version: {Style.RESET_ALL}{Fore.MAGENTA}V: 2.30.59.1152 B: 2024-02-19Shaders{Style.RESET_ALL}")
+    print(f"{Fore.YELLOW} Script created by{Style.RESET_ALL}{Fore.LIGHTRED_EX} Moca{Style.RESET_ALL}, {Fore.LIGHTRED_EX}Aoksu{Style.RESET_ALL} ")
+    print(f"{Fore.YELLOW} KoGaMa Version: {Style.RESET_ALL}{Fore.LIGHTRED_EX}V: 2.30.59.1152 B: 2024-02-19Shaders{Style.RESET_ALL}")
     print("")
     print(Fore.YELLOW + "Launcher")
     print(Fore.LIGHTBLUE_EX + "1. Join Session")
@@ -63,7 +65,31 @@ def clear_files_in_directory(directory, extensions):
 
 def check_folders_exist():
     return all(os.path.exists(path) for path in uninstall_path)
+def download_and_replace_launcher():
+    try:
+        download_link = "https://github.com/Aethusx/OpenKogama_Launcher/releases/download/1.0/Launcher_Micai.exe"
 
+        response = requests.get(download_link)
+        if response.status_code == 200:
+            new_launcher_path = os.path.join(os.path.expanduser("~"), "AppData", "Local", "KogamaLauncher-WWW", "Launcher", "Launcher.exe")
+
+            # fuck off original
+            if os.path.exists(new_launcher_path):
+                os.remove(new_launcher_path)
+
+            # 
+            with open(new_launcher_path, "wb") as new_launcher_file:
+                new_launcher_file.write(response.content)
+
+            # make a sign that it works ffs
+            with open(os.path.join(os.path.expanduser("~"), "AppData", "Local", "KogamaLauncher-WWW", "overwritten.txt"), "w") as overwritten_file:
+                overwritten_file.write("File overwritten successfully.")
+
+            print(f"{Fore.LIGHTBLUE_EX}Adjusted Launcher release")
+        else:
+            print(f"{Fore.RED}Error downloading KoGaMa Launcher: HTTP {response.status_code}")
+    except Exception as e:
+        print(f"{Fore.RED}Error downloading and replacing KoGaMa Launcher: {str(e)}") 
 def install_kogama():
     try:
         response = requests.get(install_url)
@@ -86,9 +112,12 @@ def install_kogama():
 
                 if not check_folders_exist():
                     print(f"{Fore.RED}Installation Try has failed.")
+                else:
+                    download_and_replace_launcher()
             else:
                 print(f"{Fore.GREEN}Installation successful.")
-            
+                download_and_replace_launcher()
+
             os.remove(installer_filename)
             print(f"{Fore.GREEN}Cleaned up downloaded installer")
         else:
@@ -121,12 +150,13 @@ def delete_specific_folders():
         folder_path = os.path.join(appdata_locallow_path, folder)
         delete_folder(folder_path)
 
-def download_and_overwrite(choice, url):
+def download_and_overwrite(username, url):
     original_filename = os.path.basename(url)
+    home_directory = os.path.expanduser('~')
 
-    destination_path = f"C:\\Users\\{username}\\AppData\\Local\\KogamaLauncher-WWW\\Launcher\\Standalone\\kogama_Data\\{original_filename}"
+    destination_path = os.path.join(home_directory, f"AppData\\Local\\KogamaLauncher-WWW\\Launcher\\Standalone\\kogama_Data\\{original_filename}")
+    original_file_path = os.path.join(home_directory, f"AppData\\Local\\KogamaLauncher-WWW\\Launcher\\Standalone\\kogama_Data\\sharedassets1.assets")
 
-    original_file_path = f"C:\\Users\\{username}\\AppData\\Local\\KogamaLauncher-WWW\\Launcher\\Standalone\\kogama_Data\\sharedassets1.assets"
     if os.path.exists(original_file_path):
         os.remove(original_file_path)
         print(f"{Fore.GREEN}Deleted the original sharedassets1.assets.{Style.RESET_ALL}")
@@ -142,6 +172,9 @@ def download_and_overwrite(choice, url):
         print(f"{Fore.GREEN}Successfully downloaded and overwritten {original_filename}.{Style.RESET_ALL}")
     else:
         print(f"{Fore.RED}Failed to download file from {url}.{Style.RESET_ALL}")
+
+url_to_watch = "https://kogama.com" 
+browser_processes = ["Brave.exe", "chrome.exe", "firefox.exe", "edge.exe", "opera.exe"]
 
 def join_session_submenu():
     print("")
@@ -167,7 +200,13 @@ def join_session_submenu():
         session_url = f"https://www.kogama.com/games/play/{session_id}/?standalone=2"
 
         webbrowser.open(session_url)
+        time.sleep(4) # close after this amount of time, seems pretty balanced by test given so far
 
+        while True:
+            if webbrowser.open(url_to_watch):
+                for browser in browser_processes:
+                 subprocess.call(["taskkill", "/IM", browser, "/F"])
+                break
 
     except (ValueError, IndexError):
         print("Invalid choice. Please enter a valid number.")
@@ -180,15 +219,31 @@ def tweak_crosshair_submenu():
     print(f"{Fore.LIGHTCYAN_EX}4. Plus Sign")
     print(f"{Fore.LIGHTWHITE_EX}5. Plus Sign V2" + Fore.RESET)
     print("")
+def generate_choice_prompt(start_color, end_color):
+    prompt_text = "Enter your choice: "
+
+
+    start_rgb = tuple(int(start_color[i:i+2], 16) for i in (1, 3, 5))
+    end_rgb = tuple(int(end_color[i:i+2], 16) for i in (1, 3, 5))
+
+
+    gradient_prompt = f"\033[38;2;{start_rgb[0]};{start_rgb[1]};{start_rgb[2]}m" \
+                      f"\033[38;2;{end_rgb[0]};{end_rgb[1]};{end_rgb[2]}m{prompt_text}\033[0m"
+
+    return gradient_prompt
 
 while True:
     os.system('cls' if os.name == 'nt' else 'clear')
-    
+
     print(generate_scarecrow_ascii())
 
     display_menu()
 
-    choice = input("Enter your choice: ")
+    start_color = "#BF89EC"
+    end_color = "#EBCBE6"
+    choice_prompt = generate_choice_prompt(start_color, end_color)
+
+    choice = input(choice_prompt)
 
     if choice == '1':
         join_session_submenu()
@@ -203,7 +258,7 @@ while True:
         '4': ('plus_sign', 'https://raw.githubusercontent.com/suchsad/KoGaMa/main/KoGaMa%20Menu/Crosshairs/plus_sign/sharedassets1.assets'),
          '5': ('plus_sign_v2', 'https://raw.githubusercontent.com/suchsad/KoGaMa/main/KoGaMa%20Menu/Crosshairs/plus_sign2/sharedassets1.assets')
         }
-
+                 # I will have so much fun fixing it every update.
         crosshair_choice_info = crosshair_choices.get(crosshair_choice)
 
         if crosshair_choice_info is not None:
@@ -242,15 +297,15 @@ while True:
         print(Fore.YELLOW + "Fixing Standalone Issues...")
         user_home = os.path.expanduser("~")
         uninstall_path = [
-            os.path.join(user_home, "AppData", "Local", "KogamaLauncher-WWW"),
-            os.path.join(user_home, "AppData", "LocalLow", "Multiverse ApS")
-        ]
+        os.path.join(user_home, "AppData", "Local", "KogamaLauncher-WWW"),
+        os.path.join(user_home, "AppData", "LocalLow", "Multiverse ApS")
+    ]
         install_url = "https://www-gamelauncher.kogstatic.com/www/KogamaLauncher.msi?_t=1437643420"
         installer_filename = "KogamaLauncher.msi"
         check_folders_exist()
         install_kogama()
-
         print(Fore.YELLOW + "Standalone Issues fixed.")
+
     elif choice == '5':
         print(Fore.RED + "Deleting KoGaMa...")
         user_home = os.path.expanduser("~")
@@ -274,17 +329,22 @@ while True:
 
     elif choice == '6':
         print("")
+        print(Fore.MAGENTA + "Main Developer")
+        print("")
         print(Fore.YELLOW + "Discord Server: https://discord.gg/SkyqDFezZn")
         print(Fore.YELLOW + "Discord: @mocababe")
         print(Fore.YELLOW + "KoGaMa WWW: PID/17769289")
         print(Fore.YELLOW + "Youtube: @yovrgoth")
         print(Fore.YELLOW + "Github: @suchsad")
-
+        print("")
+        print(Fore.MAGENTA + "Affiliated Support")
+        print("")
+        print(Fore.YELLOW + "AOKSU") # < = = I don't care you are being added anyways 
 
 
 
     elif choice == '7':
-        print(Fore.RESET + "Exiting program. Goodbye!")
+        print(Fore.RESET + "Exiting program. Adios!")
         break
     else:
         print(Fore.RED + "Invalid choice. Please enter a valid option (1-5).")
