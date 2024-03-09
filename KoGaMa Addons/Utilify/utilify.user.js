@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Utilify: KoGaMa
 // @namespace    discord/@simonvhs
-// @version      1.4
+// @version      1.4.1
 // @description  KoGaMa Utility addon that adds a wide variety of features such as cleaner title tabs, bring back copy pasting and text formatting (bold, italic, links, etc.) as well as fix 'Disallow URL Input'.
 // @author       ⛧ sim
 // @match        https://www.kogama.com/profile/*
@@ -23,6 +23,13 @@
   // - Fix Tylda syntax
   // - RichText
   // - Steal Description
+document.addEventListener('DOMContentLoaded', function () {
+    var miniProfile = document.getElementById('react-ingame-mini-profile');
+    if (miniProfile) {
+        miniProfile.style.display = 'none';
+    }
+});
+
 
 
   (function() {
