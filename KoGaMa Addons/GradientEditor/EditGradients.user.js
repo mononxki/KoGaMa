@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         KoGaMa Gradient Editor
 // @namespace    discord/@simonvhs
-// @version      1.3
+// @version      1.4
 // @description  Easily edit linear background theme for the website.
 // @author       ⛧ sim
 // @match        https://www.kogama.com/*
@@ -12,6 +12,9 @@
 
 GM_addStyle(`
   ._3TORb { background: rgba(0, 0, 0, 0.4); }
+  .MuiPaper-root { background-color: rgba(0, 0, 13, 0.15) !important;
+    backdrop-filter: blur(10px); border-radius: 25px !important; }
+    .jycgY ._1S6v0 ._3Wsxf .wXhWi ._23o8J { margin-left: 3px; }
 `);
  
 (function () {
