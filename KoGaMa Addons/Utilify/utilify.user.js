@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Utilify: KoGaMa
 // @namespace    discord/@simonvhs
-// @version      1.4.1
+// @version      1.4
 // @description  KoGaMa Utility addon that adds a wide variety of features such as cleaner title tabs, bring back copy pasting and text formatting (bold, italic, links, etc.) as well as fix 'Disallow URL Input'.
 // @author       ⛧ sim
 // @match        https://www.kogama.com/profile/*
@@ -9,10 +9,9 @@
 // @match        https://www.kogama.com/build/*
 // @match        https://www.kogama.com/marketplace/model/*
 // @match        https://www.kogama.com/marketplace/avatar/*
-// @grant        none
+// @grant        GM_setClipboard
 // @run-at       document-start
 // ==/UserScript==
-
 
 // CURRENT FEATURES:
   // - User Backgrounds
@@ -20,9 +19,96 @@
   // - Allow URL
   // - Better Titles
   // - Console Warning
+  // - Compact Menu
   // - Fix Tylda syntax
   // - RichText
   // - Steal Description
+
+(function() {
+    'use strict';
+
+
+    function copyTextToClipboard(text) {
+        var tempTextArea = document.createElement("textarea");
+        tempTextArea.style.position = "absolute";
+        tempTextArea.style.left = "-9999px";
+        tempTextArea.value = text;
+        document.body.appendChild(tempTextArea);
+
+        tempTextArea.select();
+        tempTextArea.setSelectionRange(0, text.length);
+
+        document.execCommand("copy");
+
+        document.body.removeChild(tempTextArea);
+    }
+        function displayNotification(message, isSuccess) {
+        var notification = document.createElement("div");
+        notification.style.position = "fixed";
+        notification.style.top = "50%";
+        notification.style.left = "50%";
+        notification.style.transform = "translate(-50%, -50%)";
+        notification.style.padding = "10px";
+        notification.style.backgroundColor = isSuccess ? "green" : "red";
+        notification.style.color = "white";
+        notification.style.fontSize = "16px";
+        notification.style.borderRadius = "5px";
+        notification.style.zIndex = "9999";
+        notification.textContent = message;
+        document.body.appendChild(notification);
+
+        setTimeout(function(){
+            document.body.removeChild(notification);
+        }, 2000);
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+
+        var bioContainer = document.querySelector("#mobile-page #profile-page .creations-feed section.creations-custom .section-description .description-container");
+        if (bioContainer) {
+
+            var copyButton = document.createElement("button");
+            copyButton.textContent = "Copy";
+            copyButton.style.position = "absolute";
+            copyButton.style.top = "10px";
+            copyButton.style.left = "50px";
+            copyButton.style.fontSize = "12px";
+            copyButton.style.backgroundColor = "transparent";
+            copyButton.style.textShadow = "0 0 3px #fff";
+            copyButton.style.cursor = "pointer";
+            copyButton.style.opacity = "0";
+            copyButton.style.transition = "opacity 0.5s";
+            bioContainer.appendChild(copyButton); // Append to the bio container
+
+            // Fade in the copy button
+            setTimeout(function(){
+                copyButton.style.opacity = "1";
+            }, 10);
+
+
+            copyButton.addEventListener("click", function(){
+
+                var descriptionText = bioContainer.querySelector(".text").textContent.trim();
+
+
+                copyTextToClipboard(descriptionText);
+
+
+                displayNotification("Text copied to clipboard", true);
+            });
+
+
+            bioContainer.addEventListener("mouseenter", function(){
+
+                copyButton.style.opacity = "1";
+            });
+            bioContainer.addEventListener("mouseleave", function(){
+
+                copyButton.style.opacity = "0";
+            });
+        }
+    });
+})();
 document.addEventListener('DOMContentLoaded', function () {
     var miniProfile = document.getElementById('react-ingame-mini-profile');
     if (miniProfile) {
@@ -172,6 +258,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 })();
+
 // REGEX
 (function() {
     'use strict';
@@ -325,3 +412,49 @@ document.addEventListener('DOMContentLoaded', InsertBeforeLoad);
 
     setInterval(fixFormatting, 500);
 })();
+// COMPACT MENU
+    function removeElementsByClass(className){
+        var elements = document.querySelectorAll(className);
+        elements.forEach(function(element) {
+            element.remove();
+        });
+    }
+
+
+    window.addEventListener('load', function() {
+
+        removeElementsByClass('.news');
+        removeElementsByClass('.subscription');
+        removeElementsByClass('.purchase');
+    });
+
+
+    var observer = new MutationObserver(function(mutationsList) {
+        mutationsList.forEach(function(mutation) {
+            if (mutation.type === 'childList') {
+
+                removeElementsByClass('.news');
+                removeElementsByClass('.subscription');
+                removeElementsByClass('.purchase');
+            }
+        });
+    });
+
+
+    var targetNode = document.body;
+    var config = { childList: true, subtree: true };
+
+
+    observer.observe(targetNode, config);
+
+
+
+const injectCss = (id, css) => {
+  const style = document.createElement('style');
+  style.id = id;
+  style.innerText = css;
+  document.head.appendChild(style);
+  return style;
+}
+
+
