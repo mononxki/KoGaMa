@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Custom Profile Backgrounds
-// @version      1.2
+// @version      1.3
 // @author       Devork, ⛧ sim
 // @description  KoGaMa Custom Profile Background Support.
 // @namespace    discord//@simonvhs
