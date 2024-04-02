@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         KoGaMa Gradient Editor
 // @namespace    discord/@simonvhs
-// @version      1.4
+// @version      1.5
 // @description  Easily edit linear background theme for the website.
 // @author       ⛧ sim
 // @match        https://www.kogama.com/*
@@ -15,6 +15,9 @@ GM_addStyle(`
   .MuiPaper-root { background-color: rgba(0, 0, 13, 0.15) !important;
     backdrop-filter: blur(10px); border-radius: 25px !important; }
     .jycgY ._1S6v0 ._3Wsxf .wXhWi ._23o8J { margin-left: 3px; }
+    #mobile-page #profile-page .section-top .section-top-background { background-image: none !important; }
+    .background-avatar { background-image: none !important; }
+    ::-webkit-scrollbar { width: 1px; }
 `);
  
 (function () {
@@ -145,11 +148,16 @@ GM_addStyle(`
     applyGradientToElement(savedGradient);
   }
  
-  function applyGradientToElement(gradient) {
-    const rootPageMobile = document.querySelector('body#root-page-mobile.winter');
-    rootPageMobile.style.backgroundImage = gradient;
-  }
- 
+ function applyGradientToElement(gradient) {
+    const seasons = ['spring', 'summer', 'autumn', 'winter'];
+
+    seasons.forEach(season => {
+        const rootPageMobile = document.querySelector(`body#root-page-mobile.${season}`);
+        if (rootPageMobile) {
+            rootPageMobile.style.backgroundImage = gradient;
+        }
+    });
+}
   function saveGradientSettings(gradient) {
     localStorage.setItem('kogamaGradient', gradient);
   }
