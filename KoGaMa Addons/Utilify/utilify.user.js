@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Utilify: KoGaMa
 // @namespace    discord/@simonvhs
-// @version      1.4
+// @version      1.5
 // @description  KoGaMa Utility addon that adds a wide variety of features such as cleaner title tabs, bring back copy pasting and text formatting (bold, italic, links, etc.) as well as fix 'Disallow URL Input'.
 // @author       ⛧ sim
 // @match        https://www.kogama.com/profile/*
@@ -10,6 +10,7 @@
 // @match        https://www.kogama.com/marketplace/model/*
 // @match        https://www.kogama.com/marketplace/avatar/*
 // @grant        GM_setClipboard
+// @grant        GM_addStyle
 // @run-at       document-start
 // ==/UserScript==
 
@@ -22,99 +23,52 @@
   // - Compact Menu
   // - Fix Tylda syntax
   // - RichText
+  // THIS FEATURE IS CURRENTLY UNAVAILABLE:
   // - Steal Description
 
 (function() {
     'use strict';
 
+    const profileId = window.location.pathname.split('/')[2];
+    const requestUrl = `https://www.kogama.com/profile/${profileId}/`;
 
-    function copyTextToClipboard(text) {
-        var tempTextArea = document.createElement("textarea");
-        tempTextArea.style.position = "absolute";
-        tempTextArea.style.left = "-9999px";
-        tempTextArea.value = text;
-        document.body.appendChild(tempTextArea);
+    fetch(requestUrl)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.text();
+        })
+        .then(data => {
+            const createdIndex = data.indexOf('"created":');
+            const startIndex = data.indexOf('"', createdIndex + 10) + 1;
+            const endIndex = data.indexOf('"', startIndex);
+            const createdValue = data.substring(startIndex, endIndex);
+            const createdDate = new Date(createdValue);
+            const formattedDate = `${createdDate.getDate()} ${getMonthName(createdDate.getMonth())} ${createdDate.getFullYear()}, ${createdDate.getHours()}:${padZero(createdDate.getMinutes())}`;
+            const targetElement = document.querySelector('._1jTCU ._20K92');
+            if (targetElement) {
+                targetElement.textContent = formattedDate;
+            } else {
+                console.error('Target element not found.');
+            }
+        })
+        .catch(error => {
+            console.error('There was a problem with the fetch operation:', error);
+        });
 
-        tempTextArea.select();
-        tempTextArea.setSelectionRange(0, text.length);
-
-        document.execCommand("copy");
-
-        document.body.removeChild(tempTextArea);
-    }
-        function displayNotification(message, isSuccess) {
-        var notification = document.createElement("div");
-        notification.style.position = "fixed";
-        notification.style.top = "50%";
-        notification.style.left = "50%";
-        notification.style.transform = "translate(-50%, -50%)";
-        notification.style.padding = "10px";
-        notification.style.backgroundColor = isSuccess ? "green" : "red";
-        notification.style.color = "white";
-        notification.style.fontSize = "16px";
-        notification.style.borderRadius = "5px";
-        notification.style.zIndex = "9999";
-        notification.textContent = message;
-        document.body.appendChild(notification);
-
-        setTimeout(function(){
-            document.body.removeChild(notification);
-        }, 2000);
+    function getMonthName(monthIndex) {
+        const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+        return months[monthIndex];
     }
 
-    document.addEventListener('DOMContentLoaded', function() {
-
-        var bioContainer = document.querySelector("#mobile-page #profile-page .creations-feed section.creations-custom .section-description .description-container");
-        if (bioContainer) {
-
-            var copyButton = document.createElement("button");
-            copyButton.textContent = "Copy";
-            copyButton.style.position = "absolute";
-            copyButton.style.top = "10px";
-            copyButton.style.left = "50px";
-            copyButton.style.fontSize = "12px";
-            copyButton.style.backgroundColor = "transparent";
-            copyButton.style.textShadow = "0 0 3px #fff";
-            copyButton.style.cursor = "pointer";
-            copyButton.style.opacity = "0";
-            copyButton.style.transition = "opacity 0.5s";
-            bioContainer.appendChild(copyButton); // Append to the bio container
-
-            // Fade in the copy button
-            setTimeout(function(){
-                copyButton.style.opacity = "1";
-            }, 10);
-
-
-            copyButton.addEventListener("click", function(){
-
-                var descriptionText = bioContainer.querySelector(".text").textContent.trim();
-
-
-                copyTextToClipboard(descriptionText);
-
-
-                displayNotification("Text copied to clipboard", true);
-            });
-
-
-            bioContainer.addEventListener("mouseenter", function(){
-
-                copyButton.style.opacity = "1";
-            });
-            bioContainer.addEventListener("mouseleave", function(){
-
-                copyButton.style.opacity = "0";
-            });
-        }
-    });
+    function padZero(num) {
+        return num < 10 ? '0' + num : num;
+    }
 })();
-document.addEventListener('DOMContentLoaded', function () {
-    var miniProfile = document.getElementById('react-ingame-mini-profile');
-    if (miniProfile) {
-        miniProfile.style.display = 'none';
-    }
-});
+
+
+
 
 
 
@@ -313,7 +267,8 @@ document.addEventListener('DOMContentLoaded', function () {
 const ConsoleStyle = Object.freeze({
     HEADING: "background-color:#d25858;font-size:70px;font-weight:bold;color:white;",
     NORMAL : "font-size:20px;",
-    URGENT : "font-size:25px;font-weight:bold;color:red;"
+    URGENT : "font-size:25px;font-weight:bold;color:red;",
+    INVITE : "color: transparent;text-decoration:underline;font-weight:bold;font-size:20px;background: linear-gradient(to bottom, #865cb5, #ff69b4);-webkit-background-clip: text;background-clip: text;"
 });
 
    console.log(`%c Chill, Cowboy! `,    ConsoleStyle.HEADING);
@@ -321,77 +276,103 @@ const ConsoleStyle = Object.freeze({
         console.log("%c" + "Pasting anything in here could give attackers access to your KoGaMa account.",    ConsoleStyle.URGENT);
         console.log("%c" + "Unless you know exactly what you're doing, close this window and stay safe.",  ConsoleStyle.NORMAL);
         console.log("%c" + "You might want to consider reporting the user who told you to open it.", ConsoleStyle.NORMAL);
+        console.log("%c" + "However, if you are aware of what you are doing, consider hitting me up on @simonvhs", ConsoleStyle.INVITE);
 }, "2300")
 }
-const InsertBeforeLoad = async () => {
-  const DESCRIPTION_TEXT = document.querySelector('#description-extend > div > div.text').innerHTML;
-  const BACKGROUND_AVATAR = document.querySelector('.background-avatar');
-  const BACKGROUND_SECTION = document.querySelector('.section-top-background');
-  const BACKGROUND_REGEXP = /background:\s*(\d+)(?:,\s*filter:\s*(light|dark|blur|none))?;/i;
-  const BACKGROUND_DETAILS = BACKGROUND_REGEXP.exec(DESCRIPTION_TEXT);
+(async function() {
+    'use strict';
 
-  if (typeof BACKGROUND_DETAILS == 'object') {
-    try {
-      const gameId = BACKGROUND_DETAILS[1];
-      const imageSrc = await fetchImageSource(gameId);
+    const waitForElement = async (selector) => {
+        while (!document.querySelector(selector)) {
+            await new Promise(resolve => requestAnimationFrame(resolve));
+        }
+        return document.querySelector(selector);
+    };
+
+    const InsertBeforeLoad = async () => {
+        try {
+            const DESCRIPTION_ELEMENT = await waitForElement('div._9smi2 > div.MuiPaper-root._1rJI8.MuiPaper-rounded > div._1aUa_');
+            const DESCRIPTION_TEXT = DESCRIPTION_ELEMENT.textContent; // Using textContent instead of innerHTML
+            const BACKGROUND_AVATAR = document.querySelector('._33DXe');
+            const BACKGROUND_SECTION = document.querySelector('._33DXe');
+
+            // Fix REGEX
+            const BACKGROUND_REGEXP = /(?:\|\|)?Background:\s*(\d+)(?:,\s*filter:\s*(light|dark|blur|none))?;?(?:\|\|)?/i;
+            const match = BACKGROUND_REGEXP.exec(DESCRIPTION_TEXT);
+
+            if (match && typeof match == 'object') {
+                const gameId = match[1];
+                const embedUrl = `https://www.kogama.com/games/play/${gameId}/embed`;
+                console.log("%cFetched embed URL:", "color: blue", embedUrl);
+
+                const imageSrc = await fetchImageSource(gameId);
+
+                BACKGROUND_AVATAR.style.transition = 'opacity 0.3s ease-in';
+                BACKGROUND_AVATAR.style.opacity = '0';
+
+                BACKGROUND_SECTION.style.transition = 'opacity 0.3s ease-in';
+                BACKGROUND_SECTION.style.opacity = '0';
+
+                setTimeout(() => {
+                    BACKGROUND_AVATAR.style.opacity = '1';
+                    BACKGROUND_SECTION.style.opacity = '1';
+                }, 1000);
 
 
-      BACKGROUND_AVATAR.style.transition = 'opacity 0.3s ease-in';
-      BACKGROUND_AVATAR.style.opacity = '0';
+                BACKGROUND_SECTION.style.backgroundImage = `linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url("${imageSrc}")`;
 
-      BACKGROUND_SECTION.style.transition = 'opacity 0.3s ease-in';
-      BACKGROUND_SECTION.style.opacity = '0';
+                switch (match[2]) {
+                    case 'blur':
+                        BACKGROUND_AVATAR.style.filter = 'none';
+                        BACKGROUND_SECTION.style.filter = 'blur(5px)';
+                        break;
+                    case 'none':
+                        BACKGROUND_AVATAR.style.opacity = 'unset';
+                        BACKGROUND_AVATAR.style.filter = 'none';
 
+                        BACKGROUND_SECTION.style.filter = 'none';
+                        break;
+                    case 'dark':
+                        BACKGROUND_SECTION.style.backgroundImage = `linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url("${imageSrc}")`;
+                        break;
+                }
+            }
+        } catch (error) {
+            console.error('Error:', error.message);
+        }
+    };
 
-      setTimeout(() => {
-        BACKGROUND_AVATAR.style.opacity = '1';
-        BACKGROUND_SECTION.style.opacity = '1';
-      }, 1000);
+    async function fetchImageSource(gameId) {
+        try {
+            const url = `https://www.kogama.com/games/play/${gameId}/embed`;
+            const response = await fetch(url);
 
-      BACKGROUND_AVATAR.style.backgroundImage = `url(${imageSrc})`;
+            if (!response.ok) {
+                throw new Error(`Failed to fetch. Status: ${response.status}`);
+            }
 
-      switch (BACKGROUND_DETAILS[2]) {
-        case 'blur':
-          BACKGROUND_AVATAR.style.filter = 'none';
-          BACKGROUND_SECTION.style.filter = 'blur(5px)';
-          break;
-        case 'none':
-          BACKGROUND_AVATAR.style.opacity = 'unset';
-          BACKGROUND_AVATAR.style.filter = 'none';
-          BACKGROUND_SECTION.style.backgroundImage = 'none';
-          BACKGROUND_SECTION.style.filter = 'none';
-          break;
-        case 'dark':
-          BACKGROUND_SECTION.style.backgroundImage = `linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url(${imageSrc})`;
-          break;
-      }
-    } catch (error) {
-      console.error('Error:', error.message);
+            const htmlText = await response.text();
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = htmlText;
+
+            // Locate input with large image
+            const inputElement = tempDiv.querySelector('li.large input.pure-input');
+
+            // steal the value
+            const kogstaticUrl = inputElement.value;
+
+            // log to console to make sure it works - debug runs..
+            console.log('Fetched Kogstatic URL:', kogstaticUrl);
+
+            return kogstaticUrl;
+        } catch (error) {
+            throw new Error(`Error fetching image source: ${error.message}`);
+        }
     }
-  }
-};
 
-async function fetchImageSource(gameId) {
-  try {
-    const url = `https://www.kogama.com/games/play/${gameId}/embed`;
-    const response = await fetch(url);
+    InsertBeforeLoad();
+})();
 
-    if (!response.ok) {
-      throw new Error(`Failed to fetch. Status: ${response.status}`);
-    }
-
-    const htmlText = await response.text();
-    const tempDiv = document.createElement('div');
-    tempDiv.innerHTML = htmlText;
-
-    const imageSrc = tempDiv.querySelector('li.large img').getAttribute('src');
-    return imageSrc;
-  } catch (error) {
-    throw new Error(`Error fetching image source: ${error.message}`);
-  }
-}
-
-document.addEventListener('DOMContentLoaded', InsertBeforeLoad);
 
 (function() {
     'use strict';
@@ -455,6 +436,5 @@ const injectCss = (id, css) => {
   style.innerText = css;
   document.head.appendChild(style);
   return style;
-}
-
+};
 
