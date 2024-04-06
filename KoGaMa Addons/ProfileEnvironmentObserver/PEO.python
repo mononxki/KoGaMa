@@ -1,0 +1,161 @@
+import requests
+import json
+import re
+import os
+import time
+from datetime import datetime
+from discord_webhook import DiscordWebhook, DiscordEmbed
+from bs4 import BeautifulSoup
+from colorama import Fore, Style
+
+# Variables
+UID = '670089421'  # User ID
+WEBHOOK_URL = 'URWEBHOOK'
+SCAN_INTERVAL = 3600  # Interval to rescan in seconds (3.6k = each 1h)
+
+def fetch_gold(user_id):
+    url = f"https://www.kogama.com/profile/{user_id}/"
+    response = requests.get(url)
+    if response.status_code == 200:
+        soup = BeautifulSoup(response.text, 'html.parser')
+        gold_element = soup.find('div', class_='_2ydTi')
+        if gold_element:
+            return gold_element.text.strip()
+    return "N/A"
+
+def download_image(image_url, filename):
+    response = requests.get(image_url)
+    if response.status_code == 200:
+        with open(filename, 'wb') as f:
+            f.write(response.content)
+        return True
+    return False
+
+def send_embed_to_webhook(embed_data, description_content, image_filename, color):
+    webhook = DiscordWebhook(url=WEBHOOK_URL)
+    embed = DiscordEmbed(title='Kogama Profile', color=color)  
+    embed.set_thumbnail(url=embed_data['thumbnail'])
+    embed.set_image(url=f'attachment://{image_filename}')
+    for category, fields in embed_data['fields'].items():
+        embed.add_embed_field(name=category, value='\n'.join(fields))
+    webhook.add_embed(embed)
+    webhook.add_file(file=open('description.md', 'rb'), filename='description.md')
+    webhook.add_file(file=open(image_filename, 'rb'), filename=image_filename)
+    response = webhook.execute()
+    print('Embed sent successfully.')
+
+def check_for_changes(previous_data):
+    try:
+        response = requests.get(f'https://www.kogama.com/profile/{UID}/')
+        html = response.text
+
+        script_pattern = re.compile(r'options\.bootstrap = ({.*?});', re.DOTALL)
+        match = script_pattern.search(html)
+
+        if match:
+            data = json.loads(match.group(1))
+            user_data = data.get('object')
+
+            if user_data:
+                xp = "{:,}".format(user_data.get('xp'))
+                leaderboard_rank = user_data.get('leaderboard_rank')
+                level = user_data.get('level')
+                username = user_data.get('username')
+                user_id = user_data.get('id')
+                description = user_data.get('description')
+                large_image = user_data.get('images', {}).get('large')
+                
+                print("Large image URL:", large_image)  # Debugging output
+
+                if previous_data['xp'] != xp or previous_data['leaderboard_rank'] != leaderboard_rank \
+                        or previous_data['level'] != level or previous_data['username'] != username \
+                        or previous_data['gold'] != fetch_gold(user_id) or previous_data['description'] != description:
+                    if large_image is None or large_image == '':
+                        print("No large image found. Scraping again.")
+                        return True, {
+                            'xp': xp,
+                            'leaderboard_rank': leaderboard_rank,
+                            'level': level,
+                            'username': username,
+                            'gold': fetch_gold(user_id),
+                            'description': description
+                        }, large_image
+                    return True, {
+                        'xp': xp,
+                        'leaderboard_rank': leaderboard_rank,
+                        'level': level,
+                        'username': username,
+                        'gold': fetch_gold(user_id),
+                        'description': description
+                    }, large_image
+                return False, None, None
+        else:
+            print("Script tag containing data not found.")
+    except json.JSONDecodeError as e:
+        print('Error decoding JSON data:', e)
+    except Exception as e:
+        print('Error fetching data:', e)
+    return False, None, None
+
+def main():
+    previous_data = {
+        'xp': None,
+        'leaderboard_rank': None,
+        'level': None,
+        'username': None,
+        'gold': None,
+        'description': None
+    }
+
+    while True:
+        try:
+            changes_detected, new_data, large_image = check_for_changes(previous_data)
+            if changes_detected:
+                print(f'{Fore.YELLOW}Changes found, using quick refresh mode{Style.RESET_ALL}')
+                embed_color = 0x800080
+            else:
+                embed_color = 0x008000
+
+            if new_data is not None:
+                embed_data = {
+                    'thumbnail': f'https://www.kogama.com/gen_cache/f7/4b/f74b13d7-3b16-4dce-8c5c-b13f3860da3f_46x46.jpg',
+                    'fields': {
+                        'Username': [f'[__{new_data["username"]}__](https://www.kogama.com/profile/{UID})'],
+                        'Subdata': [
+                            f'Rank: {new_data["leaderboard_rank"]}',
+                            f'Level: {new_data["level"]}',
+                            f'XP: {new_data["xp"]}',
+                            f'Gold: {new_data["gold"]}'
+                        ]
+                    }
+                }
+
+                description_change_message = ""
+                if previous_data["description"] != new_data["description"]:
+                    description_change_message = f"{Fore.MAGENTA}DESCRIPTION CHANGE FOUND{Style.RESET_ALL}\n"
+
+                with open('description.md', 'w') as file:
+                    file.write(description_change_message + new_data["description"])
+
+                if large_image:
+                    # get that damn image lol
+                    download_image(large_image, 'large_image.jpg')
+                    if changes_detected:
+                        print(f'{Fore.GREEN}Detection Success, sending..{Style.RESET_ALL}')
+                    send_embed_to_webhook(embed_data, new_data["description"], 'large_image.jpg', embed_color)
+                else:
+                    print("No large image found. Skipping sending.")
+                    
+                previous_data = new_data
+            else:
+                current_time = datetime.now().strftime("[%H:%M:%S %p]")
+                print(f"{Fore.MAGENTA}{current_time} No changes registered.{Style.RESET_ALL}")
+        except Exception as e:
+            print(f"Error occurred: {e}")
+        
+        time.sleep(SCAN_INTERVAL)
+
+
+
+if __name__ == "__main__":
+    main()
