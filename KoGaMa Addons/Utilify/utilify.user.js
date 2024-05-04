@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Utilify: KoGaMa
 // @namespace    discord/@simonvhs
-// @version      1.9.3
+// @version      2.0.2
 // @description  KoGaMa Utility addon that adds a wide variety of features such as cleaner title tabs, bring back copy pasting and text formatting (bold, italic, links, etc.) as well as fix 'Disallow URL Input'.
 // @author       ⛧ sim
 // @match        https://www.kogama.com/*
@@ -11,6 +11,7 @@
 // @match        https://www.kogama.com/marketplace/model/*
 // @match        https://www.kogama.com/marketplace/avatar/*
 // @grant        GM_setClipboard
+// @grant        GM_xmlhttpRequest
 // @grant        GM_addStyle
 // ==/UserScript==
 
@@ -20,6 +21,7 @@
   // CURRENT FEATURES:
   // - User Backgrounds
   // - Allow Paste
+  // - Basic User/Game mentions
   // - Better Titles
   // - Console Warning
   // - Compact Menu
@@ -31,6 +33,170 @@
   // - KoGaMaBuddy emojis
   // CURRENTLY BROKEN:
   //  * Allow URL input  ( It can be used as a separate script along main one, will work properly. )
+
+
+(function() {
+    'use strict';
+
+
+    GM_addStyle(`
+        .custom-link {
+            color: #90c288 !important; /* Change color to red */
+            font-weight: italic; /* Make text bold */
+            text-decoration: underline; /* Add underline */
+        }
+    `);
+
+
+    const processedGameMentions = new Set();
+
+
+    function extractUserID(mention) {
+        return mention.substring(1);
+    }
+
+
+    function fetchUserProfile(userID, parentNode) {
+        console.log(`Fetching profile for user ID: ${userID}`);
+        const profileURL = `https://www.kogama.com/profile/${userID}/`;
+
+        GM_xmlhttpRequest({
+            method: "GET",
+            url: profileURL,
+            onload: function(response) {
+                console.log(`Received response for user ID: ${userID}`);
+                if (response.status === 200) {
+
+                    const match = response.responseText.match(/{"user_id":\s*(\d+),\s*"username":\s*"([^"]+)"/);
+                    if (match) {
+
+                        const user_id = match[1];
+                        const username = match[2];
+
+
+                        const link = document.createElement('a');
+                        link.href = profileURL;
+                        link.textContent = `@${username}`;
+                        link.classList.add('custom-link');
+
+
+                        const regex = new RegExp(`@${userID}`, 'g');
+                        parentNode.nodeValue = parentNode.nodeValue.replace(regex, '');
+                        parentNode.parentNode.insertBefore(link, parentNode.nextSibling);
+
+
+                        console.log(`Request sent to URL: ${profileURL}`);
+                        console.log(`Fetched data: user_id: ${user_id}, username: ${username}`);
+                    } else {
+                        console.error(`JSON-like structure not found in response for user ID: ${userID}`);
+                    }
+                } else {
+                    console.error(`Error fetching user profile for user ID: ${userID}. Status: ${response.status}`);
+                    console.log("Response content:", response.responseText);
+                }
+            },
+            onerror: function(error) {
+                console.error(`Error fetching user profile for user ID: ${userID}`, error);
+            }
+        });
+    }
+
+
+    function fetchGameInfo(gameID, parentNode) {
+        console.log(`Fetching game info for game ID: ${gameID}`);
+        const gameURL = `https://www.kogama.com/games/play/${gameID}/`;
+
+        GM_xmlhttpRequest({
+            method: "GET",
+            url: gameURL,
+            onload: function(response) {
+                console.log(`Received response for game ID: ${gameID}`);
+                if (response.status === 200) {
+
+                    const match = response.responseText.match(/<title>([^<]+)<\/title>/);
+                    if (match) {
+                        let gameTitle = match[1];
+
+                        gameTitle = gameTitle.replace(/ - KoGaMa.*$/, '');
+
+
+                        const link = document.createElement('a');
+                        link.href = gameURL;
+                        link.textContent = gameTitle;
+                        link.classList.add('custom-link');
+
+                        const regex = new RegExp(`G${gameID}`, 'g');
+                        parentNode.nodeValue = parentNode.nodeValue.replace(regex, '');
+                        parentNode.parentNode.insertBefore(link, parentNode.nextSibling);
+
+                        console.log(`Fetched game info: Game ID: ${gameID}, Game title: ${gameTitle}`);
+                    } else {
+                        console.error(`Game title not found in response for game ID: ${gameID}`);
+                    }
+                } else {
+                    console.error(`Error fetching game info for game ID: ${gameID}. Status: ${response.status}`);
+                    console.log("Response content:", response.responseText);
+                }
+            },
+            onerror: function(error) {
+                console.error(`Error fetching game info for game ID: ${gameID}`, error);
+            }
+        });
+    }
+
+    function findAndReplaceMentions(node) {
+        const mentionRegex = /@(\d+)/;
+        const gameMentionRegex = /G(\d+)/;
+        if (node.nodeType === Node.ELEMENT_NODE && node.tagName !== "A") {
+            for (const attr of node.attributes) {
+                let match = mentionRegex.exec(attr.nodeValue);
+                if (match !== null) {
+                    const userID = match[1];
+                    fetchUserProfile(userID, node);
+                }
+                match = gameMentionRegex.exec(attr.nodeValue);
+                if (match !== null && !processedGameMentions.has(match[1])) {
+                    const gameID = match[1];
+                    fetchGameInfo(gameID, node);
+                    processedGameMentions.add(gameID);
+                }
+            }
+        }
+        if (node.childNodes.length > 0) {
+            for (const childNode of node.childNodes) {
+                findAndReplaceMentions(childNode);
+            }
+        } else if (node.nodeType === Node.TEXT_NODE) {
+            let match = mentionRegex.exec(node.nodeValue);
+            if (match !== null) {
+                const userID = match[1];
+                fetchUserProfile(userID, node);
+            }
+            match = gameMentionRegex.exec(node.nodeValue);
+            if (match !== null && !processedGameMentions.has(match[1])) {
+                const gameID = match[1];
+                fetchGameInfo(gameID, node);
+                processedGameMentions.add(gameID);
+            }
+        }
+    }
+
+
+    function startScanning() {
+        processedGameMentions.clear();
+        findAndReplaceMentions(document.body);
+        setTimeout(startScanning, 700);
+    }
+
+
+    if (document.readyState === 'complete') {
+        startScanning();
+    } else {
+        window.addEventListener('load', startScanning);
+    }
+})();
+
+
 (function() {
     'use strict';
 
@@ -675,108 +841,91 @@
 
 
 
-  (function() {
+(function() {
     'use strict';
 
-    function getUserInfoFromHTML() {
-        const usernameElement = document.querySelector('.username h1');
-        if (usernameElement) {
-            const username = usernameElement.textContent.trim();
-            return { username };
-        }
-        return null;
+    function getUsernameFromTitle() {
+        const title = document.title;
+        const username = title.split(' - ')[0];
+        return username;
     }
 
-    function getProfileIDFromURL() {
-        const profileIDMatch = window.location.pathname.match(/\/profile\/([^/]+)\//);
-        return profileIDMatch ? profileIDMatch[1] : null;
+    function getUserIDFromURL() {
+        const userIDMatch = window.location.pathname.match(/\/profile\/([^/]+)\//);
+        return userIDMatch ? userIDMatch[1] : null;
     }
 
     function getGameInfoFromURL() {
-        const gameTitleElement = document.querySelector('.game-title');
-        if (gameTitleElement) {
-            const gameTitle = gameTitleElement.textContent.trim();
-            const gameIDMatch = window.location.pathname.match(/\/games\/play\/([^/]+)\//);
-            const gameID = gameIDMatch ? gameIDMatch[1] : null;
-            return { gameTitle, gameID };
-        }
-        return null;
-    }
-
-    function getBuildInfoFromURL() {
-        const modeElement = document.querySelector('.project-information .display h2');
-        if (modeElement) {
-            const mode = modeElement.textContent.trim();
-            return { mode };
-        }
-        return null;
-    }
-
-    function getModelInfoFromURL() {
-        const modelTitleElement = document.querySelector('.product-header .page-header');
-        if (modelTitleElement) {
-            const modelTitle = modelTitleElement.textContent.trim();
-            return { modelTitle };
-        }
-        return null;
-    }
-
-    function getAvatarInfoFromURL() {
-        const avatarTitleElement = document.querySelector('.product-header .page-header');
-        if (avatarTitleElement) {
-            const avatarTitle = avatarTitleElement.textContent.trim();
-            return { avatarTitle };
-        }
-        return null;
-    }
-
-    function isPlayingGame() {
-        return window.location.pathname.startsWith('/games/play/');
+        const gameIDMatch = window.location.pathname.match(/\/games\/play\/([^/]+)\//);
+        return gameIDMatch ? gameIDMatch[1] : null;
     }
 
     function setDocumentTitle() {
         const path = window.location.pathname;
 
         if (path.startsWith('/profile/')) {
-            const userInfo = getUserInfoFromHTML();
-            const profileID = getProfileIDFromURL();
+            const username = getUsernameFromTitle();
+            const userID = getUserIDFromURL();
 
-            if (userInfo && profileID) {
-                const { username } = userInfo;
-                document.title = `(U:${profileID}) ${username}`;
+            if (username && userID) {
+                let newTitle = `${username} (${userID})`;
+
+                // Check if the user ID is already in the title
+                if (!document.title.includes(`(${userID})`)) {
+                    document.title = newTitle;
+                }
             }
         } else if (path.startsWith('/games/')) {
-            if (isPlayingGame()) {
-                const gameInfo = getGameInfoFromURL();
-                if (gameInfo) {
-                    const { gameTitle, gameID } = gameInfo;
-                    document.title = `(G:${gameID}) ${gameTitle}`;
+            const gameID = getGameInfoFromURL();
+
+            if (gameID) {
+                const title = document.title;
+                const gameTitle = title.split(' - ')[0].trim();
+
+                // Check if the game ID is already in the title
+                if (!document.title.includes(`(${gameID})`)) {
+                    document.title = `${gameTitle} (${gameID})`;
                 }
             } else {
                 document.title = 'Games';
             }
         } else if (path.startsWith('/build/')) {
-            const buildInfo = getBuildInfoFromURL();
-            if (buildInfo) {
-                const { mode } = buildInfo;
-                document.title = `(Project) ${mode}`;
-            } else {
+            // Handle build page
+            const title = document.title;
+            if (path.split('/').length === 3) {
                 document.title = 'Build';
-            }
-        } else if (path.startsWith('/marketplace/model/')) {
-            const modelInfo = getModelInfoFromURL();
-            if (modelInfo) {
-                const { modelTitle } = modelInfo;
-                document.title = `(Model) ${modelTitle}`;
+            } else {
+                const buildTitle = title.split(' - ')[0].trim();
+                document.title = buildTitle;
             }
         } else if (path.startsWith('/marketplace/avatar/')) {
-            const avatarInfo = getAvatarInfoFromURL();
-            if (avatarInfo) {
-                const { avatarTitle } = avatarInfo;
-                document.title = `(Avatar) ${avatarTitle}`;
+            // Handle avatar marketplace page
+            const title = document.title;
+            if (!title.includes('(Avatar)')) {
+                document.title = `${title.split(' - ')[0].trim()} (Avatar)`;
             }
+        } else if (path.startsWith('/marketplace/model/')) {
+            // Handle model marketplace page
+            const title = document.title;
+            if (!title.includes('(Model)')) {
+                document.title = `${title.split(' - ')[0].trim()} (Model)`;
+            }
+        } else if (path.startsWith('/marketplace/')) {
+            const title = document.title;
+            // Check if there is a subdirectory after "/marketplace/"
+            if (path.split('/').length > 3) {
+                // Handle specific marketplace pages
+                document.title = title.split(' - ')[0].trim();
+            } else {
+                // Handle general marketplace page
+                document.title = 'Shop';
+            }
+        } else if (path.startsWith('/news/')) {
+            document.title = 'News';
+        } else if (path.startsWith('/leaderboard/')) {
+            document.title = 'Leaderboard';
         } else {
-            document.title = 'Marketplace';
+            document.title = 'KoGaMa';
         }
     }
 
@@ -786,7 +935,6 @@
 
     window.addEventListener('load', setDocumentTitle);
 })();
- 
 
 // REGEX
 (function() {
@@ -894,7 +1042,7 @@ const ConsoleStyle = Object.freeze({
                 }, 1000);
 
 
-                BACKGROUND_SECTION.style.backgroundImage = `linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url("${imageSrc}")`;
+                BACKGROUND_SECTION.style.backgroundImage = `linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.3)), url("${imageSrc}")`;
 
                 switch (match[2]) {
                     case 'blur':
