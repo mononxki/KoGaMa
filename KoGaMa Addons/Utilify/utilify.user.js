@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Utilify: KoGaMa
 // @namespace    discord/@simonvhs
-// @version      2.0.2
-// @description  KoGaMa Utility addon that adds a wide variety of features such as cleaner title tabs, bring back copy pasting and text formatting (bold, italic, links, etc.) as well as fix 'Disallow URL Input'.
+// @version      2.1.3
+// @description  KoGaMa Utility script that aims to port as much KoGaBuddy features as possible alongside adding my own.
 // @author       ⛧ sim
 // @match        https://www.kogama.com/*
 // @match        https://www.kogama.com/profile/*
@@ -17,22 +17,544 @@
 
 
 
+// - Allow Paste
+// - Auto Block Users
+// - Basic User/Game mentions
+// - Better Titles
+// - Compact Menu
+// - Console Warning
+// - Edit Website Gradient
+// - Faster Friendslist
+// - Fix Tylda syntax
+// - KoGaMaBuddy emojis
+// - Preview Marketplace Images
+// - RichText
+// - Steal Description
+// - User Backgrounds
 
-  // CURRENT FEATURES:
-  // - User Backgrounds
-  // - Allow Paste
-  // - Basic User/Game mentions
-  // - Better Titles
-  // - Console Warning
-  // - Compact Menu
-  // - Fix Tylda syntax
-  // - RichText
-  // - Preview Marketplace Images
-  // - Edit Website Gradient
-  // - Steal Description
-  // - KoGaMaBuddy emojis
-  // CURRENTLY BROKEN:
-  //  * Allow URL input  ( It can be used as a separate script along main one, will work properly. )
+
+// NON-FUNCTIONAL:
+// - Allow URL input
+
+(function() {
+    'use strict';
+
+    GM_addStyle(`
+        .menu-label {
+            display: inline-block;
+            color: #e8e8e8;
+            cursor: pointer;
+            margin-top: 10px;
+            margin-left: 14px;
+            font-weight: 700;
+        }
+        .menu-icon {
+            display: inline-block;
+            vertical-align: middle;
+            margin-right: 5px;
+            margin-bottom: 6px;
+            padding-left: 3px;
+        }
+        .expanded-menu {
+            position: absolute;
+            background-color: rgba(0, 0, 0, 0.8);
+            padding: 10px;
+            border-radius: 5px;
+            display: none;
+            z-index: 9999;
+            transition: max-height 0.3s ease;
+        }
+        .expanded-menu.show {
+            display: block;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .expanded-menu button {
+            display: block;
+            background-color: transparent;
+            border: none;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 13px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        .expanded-menu button:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+        .dark-glass {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 999;
+            border-radius: 21px;
+        }
+        .modal-content {
+            background: rgba(0, 0, 0, 0.8);
+            padding: 20px;
+            border-radius: 21px;
+            width: 300px;
+            text-align: center;
+        }
+        .modal-content input {
+            margin-bottom: 10px;
+            width: calc(100% - 40px);
+            padding: 8px;
+            border: none;
+            border-radius: 5px;
+        }
+        .modal-content button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        .modal-content button:hover {
+            background-color: #45a049;
+        }
+        .modal-content select {
+            width: calc(50% - 10px);
+            padding: 8px;
+            border: none;
+            border-radius: 5px;
+        }
+        .modal-content .apply-btn {
+            width: calc(50% - 10px);
+        }
+
+        .blocking-status {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            z-index: 999;
+        }
+        .notification {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 99999;
+            background-color: rgba(0, 0, 0, 0.8);
+            color: #fff;
+            padding: 10px 20px;
+            border-radius: 5px;
+            margin-top: 10px;
+        }
+    `);
+
+    var menuLabel = document.createElement('div');
+    menuLabel.className = 'menu-label';
+    menuLabel.innerHTML = '<svg class="menu-icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a10 10 0 1 1-2.8-6.2"></path></svg>Extras';
+
+    var header = document.querySelector('#pageheader > .pageheader-inner');
+
+    if (header) {
+        header.appendChild(menuLabel);
+
+        var expandedMenu = document.createElement('div');
+        expandedMenu.className = 'expanded-menu';
+
+        var menuButtons = document.createElement('div');
+        menuButtons.className = 'menu-buttons';
+
+        var gradientButton = document.createElement('button');
+        gradientButton.textContent = 'Gradient';
+
+        gradientButton.addEventListener('click', function() {
+            var currentUrl = window.location.href;
+            var newUrl = currentUrl + '/gradient';
+            window.location.href = newUrl;
+        });
+
+        var autoblockingButton = document.createElement('button');
+        autoblockingButton.textContent = 'Autoblocking';
+
+        autoblockingButton.addEventListener('click', function() {
+            var currentUrl = window.location.href;
+            var newUrl = currentUrl + '/autoblocking';
+            window.location.href = newUrl;
+        });
+
+        menuButtons.appendChild(gradientButton);
+        menuButtons.appendChild(autoblockingButton);
+
+        expandedMenu.appendChild(menuButtons);
+        header.appendChild(expandedMenu);
+
+        menuLabel.addEventListener('mouseenter', function() {
+            var labelRect = menuLabel.getBoundingClientRect();
+            var headerRect = header.getBoundingClientRect();
+            expandedMenu.style.left = labelRect.left - headerRect.left + 'px';
+            expandedMenu.style.top = labelRect.bottom - headerRect.top + 10 + 'px';
+            expandedMenu.classList.add('show');
+        });
+
+        expandedMenu.addEventListener('mouseleave', function() {
+            expandedMenu.classList.remove('show');
+        });
+
+        if (window.location.href.endsWith('/autoblocking')) {
+            var darkGlass = document.createElement('div');
+            darkGlass.className = 'dark-glass';
+
+            var modalContent = document.createElement('div');
+            modalContent.className = 'modal-content';
+
+            var selfIdInput = document.createElement('input');
+            selfIdInput.placeholder = 'SELFID';
+
+            var usersToBlockInput = document.createElement('input');
+            usersToBlockInput.placeholder = 'USERSTOBLOCK';
+
+            var presetDropdown = document.createElement('select');
+            presetDropdown.innerHTML = '<option value="">Select Preset</option>' +
+                                        '<option value="peaceful">Peaceful</option>' +
+                                        '<option value="null">NULL</option>';
+
+            presetDropdown.addEventListener('change', function() {
+                if (presetDropdown.value === 'peaceful') {
+                    usersToBlockInput.value = '34445, 1186442, 2416361, 2814866, 3375976, 5037938, 8339104, 9019571, 9839184, 10183579, 10497951, 15386532, 15546142, 16154001, 16324315, 18365116, 18515594, 19222931, 19531003, 20037522, 20107599, 21232073, 21269335, 22535591, 23142079, 23213484, 23323453, 24243477, 24304847, 24388642, 25037907, 25227903, 25453113, 50156316, 50417643, 50596580, 50709102, 50980597, 51053955, 51597483, 51605152, 666676920, 667204078, 667315982, 667411050, 667414035, 667630286, 667633711, 667635238, 667767029, 667789126, 667834566, 668064310, 668124616, 668156150, 668287717, 668303247, 668332488, 668923437, 669107441, 669128099, 669333877, 669358563, 669537156, 669604901, 669605680, 669650523, 669696966, 669730391';
+                } else if (presetDropdown.value === 'null') {
+                    usersToBlockInput.value = '';
+                }
+            });
+
+            var applyButton = document.createElement('button');
+            applyButton.textContent = 'Apply';
+            applyButton.className = 'apply-btn';
+
+            applyButton.addEventListener('click', function() {
+                var selfId = selfIdInput.value.trim();
+                var usersToBlock = usersToBlockInput.value.trim().split(/\s*,\s*|\s+/);
+                blockUsersWithDelay(selfId, usersToBlock);
+            });
+
+            modalContent.appendChild(selfIdInput);
+            modalContent.appendChild(usersToBlockInput);
+            modalContent.appendChild(presetDropdown);
+            modalContent.appendChild(applyButton);
+
+            darkGlass.appendChild(modalContent);
+            document.body.appendChild(darkGlass);
+        }
+    } else {
+        console.error('Header element not found!');
+    }
+
+    async function blockUsersWithDelay(selfId, usersToBlock) {
+        const delayBetweenRequests = 600;
+        const retryDelay = 1000;
+        showNotification('Blocking users...');
+
+        for (const userId of usersToBlock) {
+            await blockUserWithRetry(selfId, userId, delayBetweenRequests, retryDelay);
+            updateNotification(`User <a href="https://www.kogama.com/profile/${userId}">${userId}</a> has been blocked.`);
+        }
+
+        showNotification('All users have been blocked.');
+        setTimeout(function() {
+            var notification = document.querySelector('.notification');
+            if (notification) {
+                notification.remove();
+            }
+        }, 5000);
+    }
+
+    async function blockUserWithRetry(selfId, userId, delay, retryDelay) {
+        try {
+            await blockUserWithDelay(selfId, userId, delay);
+        } catch (error) {
+            if (error !== 500) {
+                await new Promise((resolve) => setTimeout(resolve, retryDelay));
+                await blockUserWithDelay(selfId, userId, delay);
+            }
+        }
+    }
+
+    async function blockUserWithDelay(selfId, profileId, delay) {
+        await new Promise((resolve) => setTimeout(resolve, delay));
+        const response = await fetch(`/user/${selfId}/block/`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json; charset=utf-8",
+                "X-Csrf-Token": ""
+            },
+            body: JSON.stringify({
+                profile_id: profileId
+            })
+        });
+
+        if (!response.ok) {
+            throw response.status;
+        }
+    }
+
+    function showNotification(message) {
+        var notification = document.createElement('div');
+        notification.className = 'notification';
+        notification.innerHTML = message;
+        document.body.appendChild(notification);
+
+        var notifications = document.querySelectorAll('.notification');
+        var totalHeight = 0;
+        notifications.forEach(function(item) {
+            totalHeight += item.offsetHeight;
+        });
+
+        notification.style.top = totalHeight + 20 + 'px';
+    }
+
+    function updateNotification(message) {
+        var notification = document.querySelector('.notification');
+        if (notification) {
+            notification.innerHTML = message;
+        }
+    }
+
+    var blockingStatus = document.createElement('div');
+    blockingStatus.className = 'blocking-status';
+    document.body.appendChild(blockingStatus);
+
+})();
+
+
+(function() {
+    'use strict';
+
+    function runScriptUnderSpecificURLs() {
+        const urlPattern = /https:\/\/www.kogama.com\/profile\/\w+\/friends\//;
+        if (!urlPattern.test(window.location.href)) {
+            console.log('Script will not run under this URL.');
+            return;
+        }
+
+        function getProfileID() {
+            const url = window.location.href;
+            const regex = /https:\/\/www.kogama.com\/profile\/(\w+)\/friends\//;
+            const match = url.match(regex);
+
+            if (match && match[1]) {
+                return match[1];
+            }
+
+            return null;
+        }
+
+        function storeProfileID() {
+            const profileID = getProfileID();
+
+            if (profileID) {
+                localStorage.setItem('kogamaProfileID', profileID);
+                console.log('Profile ID stored in local storage:', profileID);
+            } else {
+                console.error('Unable to retrieve Profile ID from the URL.');
+            }
+        }
+
+        async function fetchAndAppendFriends() {
+            const profileID = localStorage.getItem('kogamaProfileID');
+            if (!profileID) {
+                console.error('Profile ID not found in local storage.');
+                return;
+            }
+
+            const friendsURL = `https://www.kogama.com/user/${profileID}/friend/?count=555`;
+
+            try {
+                const response = await fetch(friendsURL);
+                const data = await response.json();
+
+                const friendsList = data.data.filter(friend => friend.friend_status === 'accepted');
+                const friendsColumn = document.querySelector('#frlscrape div:first-child');
+
+                friendsList.forEach(friend => {
+                    const friendLink = document.createElement('a');
+                    friendLink.href = `https://www.kogama.com/profile/${friend.friend_profile_id}/`;
+                    friendLink.textContent = friend.friend_username;
+
+                    const separator = document.createTextNode(', ');
+
+                    friendsColumn.appendChild(friendLink);
+                    friendsColumn.appendChild(separator);
+                });
+            } catch (error) {
+                console.error('Error fetching Friendslist:', error);
+            }
+        }
+
+        async function fetchAndAppendRequests() {
+            const profileID = localStorage.getItem('kogamaProfileID');
+            if (!profileID) {
+                console.error('Profile ID not found in local storage.');
+                return;
+            }
+
+            const requestsURL = `https://www.kogama.com/user/${profileID}/friend/requests/?page=1&count=1000`;
+
+            try {
+                const response = await fetch(requestsURL, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                });
+
+                const responseData = await response.json();
+
+                const sentRequests = [];
+                const invitingRequests = [];
+
+                responseData.data.forEach(request => {
+                    if (request.profile_id === parseInt(profileID)) {
+                        sentRequests.push({
+                            id: request.id,
+                            friend_status: request.friend_status,
+                            friend_profile_id: request.friend_profile_id,
+                            friend_username: request.friend_username,
+                        });
+                    } else {
+                        invitingRequests.push({
+                            profile_id: request.profile_id,
+                            profile_username: request.profile_username,
+                        });
+                    }
+                });
+
+                sentRequests.sort((a, b) => a.friend_username.localeCompare(b.friend_username));
+
+                appendRequestsToList('SENT', sentRequests);
+                appendRequestsToList('INVITING', invitingRequests);
+            } catch (error) {
+                console.error('Error fetching Requests:', error);
+            }
+        }
+
+        function appendRequestsToList(listType, requests) {
+            const listContainer = document.querySelector(`#${listType.toLowerCase()}List`);
+
+            if (!listContainer) {
+                console.error(`List container not found for ${listType} requests.`);
+                return;
+            }
+
+            requests.forEach(request => {
+                const requestLink = document.createElement('a');
+                if (listType === 'INVITING') {
+                    requestLink.href = `https://www.kogama.com/profile/${request.profile_id}/`;
+                    requestLink.textContent = request.profile_username;
+                } else {
+                    requestLink.href = `https://www.kogama.com/profile/${request.friend_profile_id}/`;
+                    requestLink.textContent = request.friend_username;
+                }
+
+                const separator = document.createTextNode(', ');
+
+                listContainer.appendChild(requestLink);
+                listContainer.appendChild(separator);
+            });
+        }
+
+        function appendCustomUI() {
+            const profileID = localStorage.getItem('kogamaProfileID');
+            if (!profileID) {
+                console.error('Profile ID not found in local storage.');
+                return;
+            }
+
+            const customDiv = document.createElement('div');
+            customDiv.id = 'frlscrape';
+            customDiv.style.position = 'fixed';
+            customDiv.style.top = '50%';
+            customDiv.style.left = '50%';
+            customDiv.style.transform = 'translate(-50%, -50%)';
+            customDiv.style.zIndex = '9999';
+            customDiv.style.width = '650px';
+            customDiv.style.height = '400px';
+            customDiv.style.display = 'flex';
+            customDiv.style.flexDirection = 'column';
+            customDiv.style.background = 'rgba(0, 0, 0, 0.9)';
+            customDiv.style.backdropFilter = 'blur(21px)';
+            customDiv.style.borderRadius = '10px';
+            customDiv.style.padding = '10px';
+            customDiv.style.color = '#fff';
+            customDiv.style.overflowY = 'auto';
+            customDiv.style.userSelect = 'none';
+
+            const column1 = document.createElement('div');
+            column1.style.flex = '1';
+            column1.style.marginBottom = '20px';
+
+            const friendsHeader = document.createElement('h2');
+            friendsHeader.textContent = 'Friendslist';
+            column1.appendChild(friendsHeader);
+
+            fetchAndAppendFriends();
+
+            customDiv.appendChild(column1);
+
+            const column2 = document.createElement('div');
+            column2.style.flex = '1';
+
+            const invitingHeader = document.createElement('h2');
+            invitingHeader.textContent = 'INVITING';
+            column2.appendChild(invitingHeader);
+
+            const invitingList = document.createElement('div');
+            invitingList.id = 'invitingList';
+            invitingList.style.maxHeight = '350px';
+            invitingList.style.overflowY = 'auto';
+            invitingList.style.paddingRight = '10px';
+
+            column2.appendChild(invitingList);
+
+            customDiv.appendChild(column2);
+
+            const column3 = document.createElement('div');
+            column3.style.flex = '1';
+
+            const sentHeader = document.createElement('h2');
+            sentHeader.textContent = 'SENT';
+            column3.appendChild(sentHeader);
+
+            const sentList = document.createElement('div');
+            sentList.id = 'sentList';
+            sentList.style.maxHeight = '350px';
+            sentList.style.overflowY = 'auto';
+            sentList.style.paddingRight = '10px';
+
+            column3.appendChild(sentList);
+
+            customDiv.appendChild(column3);
+
+            document.body.appendChild(customDiv);
+
+            fetchAndAppendRequests();
+
+            document.addEventListener('click', function(event) {
+                if (!customDiv.contains(event.target)) {
+                    customDiv.remove();
+                }
+            });
+        }
+
+        storeProfileID();
+        appendCustomUI();
+    }
+
+    runScriptUnderSpecificURLs();
+})();
 
 
 (function() {
@@ -721,7 +1243,25 @@
             copyButton.textContent = 'Copy Description';
             copyButton.style.display = 'block';
             copyButton.style.marginTop = '10px';
+            copyButton.style.backgroundColor = 'rgba(255, 255, 255, 0.2)'; // Transparent-like background color
+            copyButton.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.1)'; // Box shadow for glassy effect
+            copyButton.style.backdropFilter = 'blur(10px)'; // Blur filter for the glassy effect
+            copyButton.style.borderRadius = '8px'; // Border radius for rounded corners
             copyButton.style.marginBottom = '10px';
+
+            // Add event listener for mouse enter event
+copyButton.addEventListener('mouseenter', function() {
+    // Darken the background color on hover
+    copyButton.style.transition = 'background-color 0.3s ease-in-out'; // Smooth transition
+    copyButton.style.backgroundColor = 'rgba(0, 0, 0, 0.2)'; // Darker background color
+});
+
+// Add event listener for mouse leave event
+copyButton.addEventListener('mouseleave', function() {
+    // Restore the original background color on mouse leave
+    copyButton.style.transition = 'background-color 0.3s ease-in-out'; // Smooth transition
+    copyButton.style.backgroundColor = 'rgba(255, 255, 255, 0.2)'; // Original background color
+});
 
             copyButton.addEventListener('click', function() {
                 var descriptionText = getDescriptionText(descriptionDiv);
