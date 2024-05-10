@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Utilify: KoGaMa
 // @namespace    discord/@simonvhs
-// @version      2.1.3
+// @version      2.1.4
 // @description  KoGaMa Utility script that aims to port as much KoGaBuddy features as possible alongside adding my own.
 // @author       ⛧ sim
 // @match        https://www.kogama.com/*
@@ -25,6 +25,7 @@
 // - Console Warning
 // - Edit Website Gradient
 // - Faster Friendslist
+// - Friend Status Counter
 // - Fix Tylda syntax
 // - KoGaMaBuddy emojis
 // - Preview Marketplace Images
@@ -35,6 +36,86 @@
 
 // NON-FUNCTIONAL:
 // - Allow URL input
+
+
+(function() {
+    'use strict';
+
+    function updateCounterDisplay(onlineCount, offlineCount) {
+        let counterDisplay = document.getElementById('userCounterDisplay');
+        if (!counterDisplay) {
+            counterDisplay = document.createElement('div');
+            counterDisplay.id = 'userCounterDisplay';
+            counterDisplay.style.position = 'fixed';
+            counterDisplay.style.bottom = '3%';
+            counterDisplay.style.right = '10%';
+            counterDisplay.style.transform = 'translateX(50%)';
+            counterDisplay.style.zIndex = '9999';
+            counterDisplay.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
+            counterDisplay.style.backdropFilter = 'blur(13px)';
+            counterDisplay.style.padding = '10px';
+            counterDisplay.style.borderRadius = '21px';
+            counterDisplay.style.width = '120px';
+            counterDisplay.style.color = '#fff';
+            counterDisplay.style.fontWeight = '481';
+            counterDisplay.style.height = '87px';
+            counterDisplay.style.display = 'flex';
+            counterDisplay.style.flexDirection = 'column';
+            counterDisplay.style.justifyContent = 'center';
+            counterDisplay.style.alignItems = 'center';
+            counterDisplay.style.boxShadow = '0 0 10px rgba(255, 255, 255, 0.5)';
+            document.body.appendChild(counterDisplay);
+        }
+
+        counterDisplay.innerHTML = `
+            <div style="display: flex; flex-direction: column;">
+                <div style="display: flex; align-items: center; margin-bottom: 5px;">
+                    <span style="color: green; margin-right: 5px;">●</span> ${onlineCount}
+                </div>
+                <div style="display: flex; align-items: center;">
+                    <span style="color: gray; margin-right: 5px;">●</span> ${offlineCount}
+                </div>
+            </div>
+        `;
+    }
+
+    function countUsers() {
+        const allUsers = [];
+        const offlineUsers = [];
+
+        const chatExtendedSide = document.getElementById('chat-extended-side');
+
+        if (chatExtendedSide) {
+            const headers = chatExtendedSide.querySelectorAll('header');
+
+            headers.forEach(header => {
+                let sibling = header.nextElementSibling;
+
+                while (sibling && sibling.tagName !== 'HEADER') {
+                    if (sibling.classList.contains('_1lvYU')) {
+                        const username = sibling.querySelector('._1taAL ._3zDi-').textContent.trim();
+                        const state = header.textContent.trim();
+                        allUsers.push(username);
+                        if (state === 'Offline') {
+                            offlineUsers.push(username);
+                        }
+                    }
+
+                    sibling = sibling.nextElementSibling;
+                }
+            });
+
+            const onlineCount = allUsers.length - offlineUsers.length;
+            updateCounterDisplay(onlineCount, offlineUsers.length);
+        } else {
+            console.error('Chat extended side container not found.');
+        }
+    }
+
+    setInterval(countUsers, 2100);
+})();
+
+
 
 (function() {
     'use strict';
