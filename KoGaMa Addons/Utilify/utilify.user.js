@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Utilify: KoGaMa
 // @namespace    discord/@simonvhs
-// @version      2.1.4
+// @version      2.2.1
 // @description  KoGaMa Utility script that aims to port as much KoGaBuddy features as possible alongside adding my own.
 // @author       ⛧ sim
 // @match        https://www.kogama.com/*
@@ -25,8 +25,10 @@
 // - Console Warning
 // - Edit Website Gradient
 // - Faster Friendslist
+// - Find User Avatars
 // - Friend Status Counter
 // - Fix Tylda syntax
+// - GetRidOfImageStrokes
 // - KoGaMaBuddy emojis
 // - Preview Marketplace Images
 // - RichText
@@ -36,6 +38,391 @@
 
 // NON-FUNCTIONAL:
 // - Allow URL input
+
+(function() {
+    'use strict';
+
+    function isMassPurchaseURL() {
+        return window.location.pathname.endsWith('/masspurchase');
+    }
+
+    if (!isMassPurchaseURL()) {
+        return;
+    }
+
+    var menuDiv = document.createElement('div');
+    menuDiv.style.position = 'fixed';
+    menuDiv.style.top = '50%';
+    menuDiv.style.left = '50%';
+    menuDiv.style.transform = 'translate(-50%, -50%)';
+    menuDiv.style.background = 'rgba(0, 0, 0, 0.5)';
+    menuDiv.style.padding = '20px';
+    menuDiv.style.zIndex = '999';
+    menuDiv.style.boxShadow = '0px 0px 10px rgba(0,0,0,0.5)';
+    menuDiv.style.borderRadius = '10px';
+    menuDiv.style.backdropFilter = 'blur(10px)';
+    menuDiv.style.height = '320px';
+    menuDiv.style.display = 'flex';
+    menuDiv.style.flexDirection = 'column';
+    menuDiv.style.justifyContent = 'space-around';
+
+    var objectTypeLabel = document.createElement('label');
+    objectTypeLabel.textContent = 'OBJECT TYPE: ';
+    objectTypeLabel.style.color = '#fff';
+    var objectTypeSelect = document.createElement('select');
+    var avatarOption = document.createElement('option');
+    avatarOption.value = 'avatar';
+    avatarOption.textContent = 'Avatar';
+    var modelOption = document.createElement('option');
+    modelOption.value = 'model';
+    modelOption.textContent = 'Model';
+    objectTypeSelect.appendChild(avatarOption);
+    objectTypeSelect.appendChild(modelOption);
+    objectTypeSelect.style.backgroundColor = 'black';
+    objectTypeSelect.style.color = 'white';
+    objectTypeSelect.style.padding = '5px';
+    objectTypeSelect.style.borderRadius = '5px';
+    objectTypeSelect.style.width = '100px';
+    objectTypeLabel.appendChild(objectTypeSelect);
+    menuDiv.appendChild(objectTypeLabel);
+
+    var objectIdLabel = document.createElement('label');
+    objectIdLabel.textContent = 'ID: ';
+    objectIdLabel.style.color = '#fff';
+    var objectIdInput = document.createElement('input');
+    objectIdInput.type = 'text';
+    objectIdInput.style.backgroundColor = 'black';
+    objectIdInput.style.color = 'white';
+    objectIdInput.style.padding = '5px';
+    objectIdInput.style.borderRadius = '5px';
+    objectIdInput.style.width = '50px';
+    objectIdLabel.appendChild(objectIdInput);
+    menuDiv.appendChild(objectIdLabel);
+
+    var loopAmountLabel = document.createElement('label');
+    loopAmountLabel.textContent = 'AMOUNT OF LOOPS: ';
+    loopAmountLabel.style.color = '#fff';
+    var loopAmountInput = document.createElement('input');
+    loopAmountInput.type = 'number';
+    loopAmountInput.style.backgroundColor = 'black';
+    loopAmountInput.style.color = 'white';
+    loopAmountInput.style.padding = '5px';
+    loopAmountInput.style.borderRadius = '5px';
+    loopAmountInput.style.width = '100px';
+    loopAmountLabel.appendChild(loopAmountInput);
+    menuDiv.appendChild(loopAmountLabel);
+
+    var goldRequiredText = document.createElement('div');
+    goldRequiredText.style.color = 'yellow';
+    goldRequiredText.style.marginTop = '10px';
+    goldRequiredText.textContent = 'Gold Required: 0';
+    menuDiv.appendChild(goldRequiredText);
+
+    var targetReceivesText = document.createElement('div');
+    targetReceivesText.style.color = '#fff';
+    targetReceivesText.style.marginTop = '10px';
+    targetReceivesText.textContent = 'Target Receives: 0 gold';
+    menuDiv.appendChild(targetReceivesText);
+
+    var purchaseButton = document.createElement('button');
+    purchaseButton.textContent = 'PURCHASE';
+    purchaseButton.style.backgroundColor = 'green';
+    purchaseButton.style.color = 'white';
+    purchaseButton.style.padding = '5px';
+    purchaseButton.style.borderRadius = '5px';
+    purchaseButton.style.width = '100px';
+    purchaseButton.style.margin = '0 auto';
+    purchaseButton.style.marginTop = '20px';
+    menuDiv.appendChild(purchaseButton);
+
+    document.body.appendChild(menuDiv);
+
+    var infoDiv = document.createElement('div');
+    infoDiv.style.position = 'fixed';
+    infoDiv.style.bottom = '20px';
+    infoDiv.style.left = '50%';
+    infoDiv.style.transform = 'translateX(-50%)';
+    infoDiv.style.background = 'rgba(0, 0, 0, 0.8)';
+    infoDiv.style.padding = '10px';
+    infoDiv.style.borderRadius = '5px';
+    infoDiv.style.color = '#fff';
+    infoDiv.style.zIndex = '999';
+    infoDiv.textContent = 'No requests sent yet.';
+    document.body.appendChild(infoDiv);
+
+    purchaseButton.addEventListener('click', function() {
+        var objectType = objectTypeSelect.value;
+        var objectId = objectIdInput.value;
+        var loopCount = parseInt(loopAmountInput.value);
+
+        if (loopCount < 0) {
+            loopCount = 0;
+            loopAmountInput.value = 0;
+        }
+
+        var count = 0;
+        var successCount = 0;
+
+        function purchaseWithDelay() {
+            var fetchURL = '';
+            if (objectType === 'avatar') {
+                fetchURL = `https://www.kogama.com/model/market/a-${objectId}/purchase/`;
+            } else if (objectType === 'model') {
+                fetchURL = `https://www.kogama.com/model/market/i-${objectId}/purchase/`;
+            }
+
+            fetch(fetchURL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({}),
+            })
+            .then(response => {
+                if (response.ok) {
+                    successCount++;
+                    updateInfoDiv(count, successCount, loopCount);
+                } else {
+                    updateInfoDiv(count, successCount, loopCount, false);
+                }
+            })
+            .catch(error => {
+                updateInfoDiv(count, successCount, loopCount, false);
+            })
+            .finally(() => {
+                count++;
+                if (count < loopCount) {
+                    setTimeout(purchaseWithDelay, 30000); // Delay of 30 seconds
+                }
+            });
+        }
+
+        purchaseWithDelay();
+    });
+
+    function updateGoldAndTargetText() {
+        var objectType = objectTypeSelect.value;
+        var loopCount = parseInt(loopAmountInput.value);
+
+        var goldRequired = 0;
+        var targetReceives = 0;
+        if (objectType === 'avatar') {
+            goldRequired = Math.max(0, 140 * loopCount);
+            targetReceives = Math.max(0, 14 * loopCount);
+        } else if (objectType === 'model') {
+            goldRequired = Math.max(0, 10 * loopCount);
+            targetReceives = Math.max(0, loopCount);
+        }
+
+        goldRequiredText.textContent = `Gold Required: ${goldRequired}`;
+        targetReceivesText.textContent = `Target Receives: ${targetReceives} gold`;
+    }
+
+    loopAmountInput.addEventListener('input', function() {
+        var loopAmountValue = parseInt(loopAmountInput.value);
+        if (loopAmountValue < 0) {
+            loopAmountInput.value = 0;
+        }
+        updateGoldAndTargetText();
+    });
+
+    objectTypeSelect.addEventListener('change', updateGoldAndTargetText);
+
+    function updateInfoDiv(count, successCount, totalRequests, isSuccess = true) {
+        if (isSuccess) {
+            var suffix = getOrdinalSuffix(successCount);
+            infoDiv.textContent = `Object bought for the ${successCount}${suffix} time out of ${totalRequests} requests.`;
+        } else {
+            infoDiv.textContent = `Failed to purchase object. ${count} requests sent, ${successCount} successfully bought.`;
+        }
+    }
+
+    function getOrdinalSuffix(number) {
+        var suffixes = ['th', 'st', 'nd', 'rd'];
+        var remainder = number % 100;
+        return suffixes[(remainder - 20) % 10] || suffixes[remainder] || suffixes[0];
+    }
+
+})();
+
+
+(function() {
+    'use strict';
+
+    function removeElementsAndUpdateStyles() {
+        var rectElements = document.querySelectorAll('.UA3TP rect');
+        rectElements.forEach(function(rectElement) {
+            rectElement.parentNode.removeChild(rectElement);
+        });
+
+        var nestedElements = document.querySelectorAll('.UA3TP ._11RkC');
+        nestedElements.forEach(function(nestedElement) {
+            nestedElement.style.stroke = 'transparent';
+        });
+
+        var svgElements = document.querySelectorAll('.Hkdag');
+        svgElements.forEach(function(svgElement) {
+            svgElement.parentNode.removeChild(svgElement);
+        });
+    }
+
+    function handleMutations(mutationsList) {
+        mutationsList.forEach(function(mutation) {
+            mutation.addedNodes.forEach(function(node) {
+                if (node.nodeType === Node.ELEMENT_NODE) {
+                    var rectElements = node.querySelectorAll('.UA3TP rect');
+                    rectElements.forEach(function(rectElement) {
+                        rectElement.parentNode.removeChild(rectElement);
+                    });
+
+                    var nestedElements = node.querySelectorAll('.UA3TP ._11RkC');
+                    nestedElements.forEach(function(nestedElement) {
+                        nestedElement.style.stroke = 'transparent';
+                    });
+
+                    var svgElements = node.querySelectorAll('.Hkdag');
+                    svgElements.forEach(function(svgElement) {
+                        svgElement.parentNode.removeChild(svgElement);
+                    });
+                }
+            });
+        });
+    }
+
+    var observer = new MutationObserver(handleMutations);
+
+    observer.observe(document.body, { childList: true, subtree: true });
+
+    window.addEventListener('load', function() {
+        removeElementsAndUpdateStyles();
+    });
+})();
+
+(function() {
+    'use strict';
+
+    if (!/^https:\/\/www\.kogama\.com\/profile\/\d+\/avatars\/?$/.test(window.location.href)) {
+        return;
+    }
+
+    function addButtonsToAvatar(avatar) {
+        if (avatar.querySelector('.marketplace-button')) {
+            return;
+        }
+        const avatarNameElement = avatar.querySelector('._2uIZL');
+        const avatarName = avatarNameElement.textContent.trim();
+        const backgroundImageStyle = avatar.querySelector('._3Up3H').getAttribute('style');
+        const imageUrlMatch = backgroundImageStyle.match(/url\("([^"]+)"\)/);
+        const imageUrl = imageUrlMatch ? imageUrlMatch[1] : '';
+
+        const marketplaceButton = document.createElement('button');
+        marketplaceButton.textContent = 'Find';
+        marketplaceButton.className = 'marketplace-button';
+        marketplaceButton.style.cssText = `
+            position: absolute;
+            bottom: 15%;
+            left: 37%;
+            z-index: 999;
+            padding: 6px 12px;
+            background-color: #1a1a1a;
+            color: #fff;
+            border: none;
+            border-radius: 17px;
+            cursor: pointer;
+        `;
+
+        marketplaceButton.addEventListener('click', function() {
+            const requestUrl = `https://www.kogama.com/model/market/?page=1&count=200&order=undefined&category=avatar&orderBy=created&q=${encodeURIComponent(avatarName)}`;
+
+            fetch(requestUrl)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.data.length === 1) {
+                        console.log('Single object found:');
+                        console.log(data.data[0]);
+                        openMarketplacePage(data.data[0]);
+                    } else {
+                        let foundMatch = false;
+                        for (const object of data.data) {
+                            if (getBaseUrl(object.image_large) === getBaseUrl(imageUrl)) {
+                                console.log('Match Found:');
+                                console.log(object);
+                                foundMatch = true;
+                                openMarketplacePage(object);
+                                break;
+                            }
+                        }
+                        if (!foundMatch) {
+                            showNotification('Entity not found. No longer sold or the name has been changed.');
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching data:', error);
+                });
+        });
+
+        avatar.style.position = 'relative';
+        avatar.appendChild(marketplaceButton);
+    }
+
+    function openMarketplacePage(object) {
+        const productId = object.product_id;
+        const marketplaceUrl = `https://www.kogama.com/marketplace/avatar/${productId}/`;
+        window.open(marketplaceUrl, '_blank');
+    }
+
+    function getBaseUrl(url) {
+        return url.split('?')[0];
+    }
+
+    function rescanAvatars() {
+        const avatars = document.querySelectorAll('.MuiGrid-root.MuiGrid-container.MuiGrid-spacing-xs-2 .MuiGrid-item');
+
+        avatars.forEach(avatar => {
+            addButtonsToAvatar(avatar);
+        });
+    }
+
+    function showNotification(message) {
+        const notification = document.createElement('div');
+        notification.textContent = message;
+        notification.style.cssText = `
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            padding: 10px 20px;
+            background-color: rgba(0, 0, 0, 0.8);
+            color: #fff;
+            border-radius: 14px;
+            font-size: 14px;
+            z-index: 9999;
+            backdrop-filter: blur(4px);
+        `;
+
+        document.body.appendChild(notification);
+
+        setTimeout(() => {
+            notification.remove();
+        }, 2400);
+    }
+
+    window.addEventListener('load', function() {
+        console.log('Page fully loaded');
+
+        setTimeout(function() {
+            rescanAvatars();
+
+            setInterval(function() {
+                const missingButtons = document.querySelectorAll('.MuiGrid-root.MuiGrid-container.MuiGrid-spacing-xs-2 .MuiGrid-item:not(:has(.marketplace-button))');
+                if (missingButtons.length > 0) {
+                    rescanAvatars();
+                }
+            }, 5000);
+        }, 2000);
+    });
+})();
 
 
 (function() {
@@ -221,6 +608,16 @@
             text-align: center;
             z-index: 999;
         }
+        /* Friends List: Elite Frame */
+.UA3TP img[src$="svg"] {
+    transform: scale(1.1);
+    top: 2px;
+}
+
+        .UA3TP ._3tYRU,
+         .UA3TP rect {
+         clip-path: circle();
+       }
         .notification {
             position: fixed;
             top: 20px;
@@ -267,8 +664,18 @@
             var newUrl = currentUrl + '/autoblocking';
             window.location.href = newUrl;
         });
+        var masspurchaseButton = document.createElement('button');
+        masspurchaseButton.textContent = 'Mass Purchase';
+
+        masspurchaseButton.addEventListener('click', function() {
+            var currentUrl = window.location.href;
+            var newUrl = currentUrl + '/masspurchase';
+            window.location.href = newUrl;
+        });
+
 
         menuButtons.appendChild(gradientButton);
+        menuButtons.appendChild(masspurchaseButton);
         menuButtons.appendChild(autoblockingButton);
 
         expandedMenu.appendChild(menuButtons);
@@ -301,16 +708,19 @@
 
             var presetDropdown = document.createElement('select');
             presetDropdown.innerHTML = '<option value="">Select Preset</option>' +
+                                        '<option value="null">NULL</option>' +
                                         '<option value="peaceful">Peaceful</option>' +
-                                        '<option value="null">NULL</option>';
+                                        '<option value="furtherpeace">Further Peace</option>';
 
             presetDropdown.addEventListener('change', function() {
                 if (presetDropdown.value === 'peaceful') {
                     usersToBlockInput.value = '34445, 1186442, 2416361, 2814866, 3375976, 5037938, 8339104, 9019571, 9839184, 10183579, 10497951, 15386532, 15546142, 16154001, 16324315, 18365116, 18515594, 19222931, 19531003, 20037522, 20107599, 21232073, 21269335, 22535591, 23142079, 23213484, 23323453, 24243477, 24304847, 24388642, 25037907, 25227903, 25453113, 50156316, 50417643, 50596580, 50709102, 50980597, 51053955, 51597483, 51605152, 666676920, 667204078, 667315982, 667411050, 667414035, 667630286, 667633711, 667635238, 667767029, 667789126, 667834566, 668064310, 668124616, 668156150, 668287717, 668303247, 668332488, 668923437, 669107441, 669128099, 669333877, 669358563, 669537156, 669604901, 669605680, 669650523, 669696966, 669730391';
                 } else if (presetDropdown.value === 'null') {
                     usersToBlockInput.value = '';
+                } else if (presetDropdown.value === 'furtherpeace') {
+                    usersToBlockInput.value = '6141, 34445, 1186442, 2416361, 2814866, 3375976, 5037938, 8339104, 9019571, 9839184, 9852276, 10183579, 10497951, 15386532, 15546142, 16154001, 16324315, 18365116, 18515594, 19222931, 19531003, 20037522, 20107599, 20570568, 21232073, 21269335, 22535591, 23142079, 23213484, 23323453, 24243477, 24304847, 24388642, 25037907, 25227903, 25453113, 50156316, 50417643, 50453248, 50596580, 50709102, 50980597, 51053955, 51597483, 51605152, 666676920, 667204078, 667315982, 667411050, 667414035, 667630286, 667633711, 667635238, 667767029, 667789126, 667834566, 668064310, 668124616, 668156150, 668287717, 668291112, 668303247, 668332488, 668923437, 669082985, 669107441, 669128099, 669203174, 669222295, 669283759, 669303784, 669333877, 669358563, 669448523, 669484907, 669537156, 669586281, 669590528, 669604901, 669605680, 669650523, 669696966, 669730391, 669779395, 669942558, 670017695, 670019951';
                 }
-            });
+    });
 
             var applyButton = document.createElement('button');
             applyButton.textContent = 'Apply';
