@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Utilify: KoGaMa
 // @namespace    discord/@simonvhs
-// @version      2.2.1
+// @version      3.0
 // @description  KoGaMa Utility script that aims to port as much KoGaBuddy features as possible alongside adding my own.
 // @author       ⛧ sim
 // @match        https://www.kogama.com/*
@@ -31,9 +31,12 @@
 // - GetRidOfImageStrokes
 // - KoGaMaBuddy emojis
 // - Preview Marketplace Images
+// - PrivacyBlur
+// - RememberSafetyNotification
 // - RichText
 // - Steal Description
 // - User Backgrounds
+
 
 
 // NON-FUNCTIONAL:
@@ -192,7 +195,7 @@
             .finally(() => {
                 count++;
                 if (count < loopCount) {
-                    setTimeout(purchaseWithDelay, 30000); // Delay of 30 seconds
+                    setTimeout(purchaseWithDelay, 30000);
                 }
             });
         }
@@ -297,6 +300,106 @@
         removeElementsAndUpdateStyles();
     });
 })();
+GM_addStyle(`
+    .MuiFilledInput-inputMarginDense,
+    .MuiSelect-select.MuiSelect-select,
+    ._13UrL .kR267 ._9smi2 ._1rJI8 {
+        filter: blur(5px);
+        transition: filter 0.3s ease;
+    }
+    .MuiFilledInput-inputMarginDense:hover,
+    .MuiSelect-select.MuiSelect-select:hover,
+    ._13UrL .kR267 ._9smi2 ._1rJI8:hover {
+        filter: none;
+    }
+
+    ._13UrL .kR267 ._9smi2 ._1rJI8:not(::before):not(::after) {
+        filter: none; /* Resetting filter for pseudo-elements */
+    }
+    /* Initially hide the timestamps */
+    .MuiCardHeader-subheader {
+        opacity: 0;
+        transition: opacity 0.6s ease-in-out;
+    }
+
+    /* On hover, make the timestamps visible */
+    .MuiCardHeader-content:hover .MuiCardHeader-subheader {
+        opacity: 0.6;
+`);
+
+
+(function() {
+    'use strict';
+
+    const SEVEN_HOURS = 7 * 60 * 60 * 1000;
+
+    const lastNotificationTime = localStorage.getItem('lastNotificationTime');
+    const currentTime = Date.now();
+    if (!lastNotificationTime || currentTime - lastNotificationTime >= SEVEN_HOURS) {
+        displayNotification();
+        localStorage.setItem('lastNotificationTime', currentTime);
+        createBlockingLayer();
+    }
+
+    function displayNotification() {
+        const notification = document.createElement('div');
+        notification.style.position = 'fixed';
+        notification.style.top = '-100px';
+        notification.style.left = '50%';
+        notification.style.transform = 'translateX(-50%)';
+        notification.style.background = 'rgba(0, 0, 0, 0.7)';
+        notification.style.backdropFilter = 'blur(5px)';
+        notification.style.padding = '20px';
+        notification.style.borderRadius = '17px';
+        notification.style.textShadow = '0 0 3px #00000';
+        notification.style.zIndex = '9999';
+        notification.style.boxShadow = '0 0 10px #825CB0';
+        notification.style.transition = 'top 0.5s ease-in-out';
+        notification.style.color = '#fff';
+        notification.innerHTML = `
+            <p style="margin: 0; font-size: 16px; font-weight: bold;">REMEMBER</p>
+            <p style="margin: 10px 0; white-space: pre-line;">Someone trying to actually help you will never ask you for your password.\n\nRemember to stay safe and not trust users that seek out your personal data.\n\nWarm regards,\n<a href="https://www.kogama.com/profile/17769289/">Kaiser</a></p>
+            <button style="margin-top: 10px; background: #3498db; color: #fff; border: none; padding: 5px 10px; border-radius: 3px; cursor: pointer; display: block; margin: 0 auto;" id="closeBtn">Stay Safe!</button>
+        `;
+
+        document.body.appendChild(notification);
+
+        setTimeout(() => {
+            notification.style.top = '296px';
+        }, 100);
+
+        const closeBtn = notification.querySelector('#closeBtn');
+        closeBtn.addEventListener('click', () => {
+            notification.style.top = '-100px';
+            setTimeout(() => {
+                notification.remove();
+                removeBlockingLayer();
+            }, 500);
+        });
+    }
+
+    function createBlockingLayer() {
+        const blockingLayer = document.createElement('div');
+        blockingLayer.classList.add('blocking-layer');
+        blockingLayer.style.position = 'fixed';
+        blockingLayer.style.top = '0';
+        blockingLayer.style.left = '0';
+        blockingLayer.style.width = '100%';
+        blockingLayer.style.height = '100%';
+        blockingLayer.style.background = 'rgba(0, 0, 0, 0.5)';
+        blockingLayer.style.zIndex = '9998';
+        blockingLayer.style.pointerEvents = 'auto';
+        document.body.appendChild(blockingLayer);
+    }
+
+    function removeBlockingLayer() {
+        const blockingLayer = document.querySelector('.blocking-layer');
+        if (blockingLayer) {
+            blockingLayer.remove();
+        }
+    }
+})();
+
 
 (function() {
     'use strict';
@@ -792,17 +895,22 @@
                 const data = await response.json();
 
                 const friendsList = data.data.filter(friend => friend.friend_status === 'accepted');
-                const friendsColumn = document.querySelector('#frlscrape div:first-child');
+                const friendsColumn = document.querySelector('#friendsList');
 
-                friendsList.forEach(friend => {
+                if (!friendsColumn) {
+                    console.error('Friends list container not found.');
+                    return;
+                }
+
+                friendsList.forEach((friend, index) => {
                     const friendLink = document.createElement('a');
                     friendLink.href = `https://www.kogama.com/profile/${friend.friend_profile_id}/`;
                     friendLink.textContent = friend.friend_username;
-
-                    const separator = document.createTextNode(', ');
+                    friendLink.classList.add('friend-entry');
+                    friendLink.id = `friend-${index}`;
 
                     friendsColumn.appendChild(friendLink);
-                    friendsColumn.appendChild(separator);
+                    friendsColumn.appendChild(document.createTextNode(', '));
                 });
             } catch (error) {
                 console.error('Error fetching Friendslist:', error);
@@ -831,18 +939,20 @@
                 const sentRequests = [];
                 const invitingRequests = [];
 
-                responseData.data.forEach(request => {
+                responseData.data.forEach((request, index) => {
                     if (request.profile_id === parseInt(profileID)) {
                         sentRequests.push({
                             id: request.id,
                             friend_status: request.friend_status,
                             friend_profile_id: request.friend_profile_id,
                             friend_username: request.friend_username,
+                            index: index
                         });
                     } else {
                         invitingRequests.push({
                             profile_id: request.profile_id,
                             profile_username: request.profile_username,
+                            index: index
                         });
                     }
                 });
@@ -866,6 +976,8 @@
 
             requests.forEach(request => {
                 const requestLink = document.createElement('a');
+                requestLink.classList.add(`${listType.toLowerCase()}-entry`);
+                requestLink.id = `${listType.toLowerCase()}-${request.index}`;
                 if (listType === 'INVITING') {
                     requestLink.href = `https://www.kogama.com/profile/${request.profile_id}/`;
                     requestLink.textContent = request.profile_username;
@@ -874,13 +986,66 @@
                     requestLink.textContent = request.friend_username;
                 }
 
-                const separator = document.createTextNode(', ');
-
                 listContainer.appendChild(requestLink);
-                listContainer.appendChild(separator);
+                listContainer.appendChild(document.createTextNode(', '));
             });
         }
 
+       function filterEntries() {
+    const searchInput = document.querySelector('#searchInput').value.toLowerCase();
+    const friends = document.querySelectorAll('.friend-entry');
+    const inviting = document.querySelectorAll('.inviting-entry');
+    const sent = document.querySelectorAll('.sent-entry');
+
+    friends.forEach(friend => {
+        if (friend.textContent.toLowerCase().includes(searchInput)) {
+            friend.style.display = '';
+        } else {
+            friend.style.display = 'none';
+        }
+    });
+
+    inviting.forEach(request => {
+        if (request.textContent.toLowerCase().includes(searchInput)) {
+            request.style.display = '';
+        } else {
+            request.style.display = 'none';
+        }
+    });
+
+    sent.forEach(request => {
+        if (request.textContent.toLowerCase().includes(searchInput)) {
+            request.style.display = '';
+        } else {
+            request.style.display = 'none';
+        }
+    });
+
+    hideUnnecessaryCommas();
+}
+        function hideUnnecessaryCommas() {
+    const sections = ['friendsList', 'invitingList', 'sentList'];
+
+    sections.forEach(sectionId => {
+        const section = document.getElementById(sectionId);
+        const links = section.querySelectorAll('a');
+        const commas = section.childNodes;
+
+        let lastVisibleLinkIndex = -1;
+        commas.forEach((node, index) => {
+            if (node.nodeType === Node.TEXT_NODE && node.textContent.trim() === ',') {
+                node.style.display = '';
+                if (index - 1 > lastVisibleLinkIndex && links[index - 1].style.display === 'none') {
+                    node.style.display = 'none';
+                } else if (index + 1 < commas.length && links[index + 1] && links[index + 1].style.display === 'none') {
+                    node.style.display = 'none';
+                }
+            } else if (node.nodeType === Node.ELEMENT_NODE && node.tagName === 'A' && node.style.display !== 'none') {
+                lastVisibleLinkIndex = index;
+            }
+        });
+    });
+}
         function appendCustomUI() {
             const profileID = localStorage.getItem('kogamaProfileID');
             if (!profileID) {
@@ -907,7 +1072,19 @@
             customDiv.style.overflowY = 'auto';
             customDiv.style.userSelect = 'none';
 
+            const searchInput = document.createElement('input');
+            searchInput.type = 'text';
+            searchInput.id = 'searchInput';
+            searchInput.placeholder = 'Looking for somebody?';
+            searchInput.style.marginBottom = '10px';
+            searchInput.style.backgroundColor = "#2222";
+            searchInput.style.color = '#fff';
+            searchInput.style.padding = '5px';
+            searchInput.addEventListener('input', filterEntries);
+            customDiv.appendChild(searchInput);
+
             const column1 = document.createElement('div');
+            column1.id = 'friendsList';
             column1.style.flex = '1';
             column1.style.marginBottom = '20px';
 
@@ -915,46 +1092,31 @@
             friendsHeader.textContent = 'Friendslist';
             column1.appendChild(friendsHeader);
 
-            fetchAndAppendFriends();
-
             customDiv.appendChild(column1);
 
             const column2 = document.createElement('div');
+            column2.id = 'invitingList';
             column2.style.flex = '1';
 
             const invitingHeader = document.createElement('h2');
             invitingHeader.textContent = 'INVITING';
             column2.appendChild(invitingHeader);
 
-            const invitingList = document.createElement('div');
-            invitingList.id = 'invitingList';
-            invitingList.style.maxHeight = '350px';
-            invitingList.style.overflowY = 'auto';
-            invitingList.style.paddingRight = '10px';
-
-            column2.appendChild(invitingList);
-
             customDiv.appendChild(column2);
 
             const column3 = document.createElement('div');
+            column3.id = 'sentList';
             column3.style.flex = '1';
 
             const sentHeader = document.createElement('h2');
             sentHeader.textContent = 'SENT';
             column3.appendChild(sentHeader);
 
-            const sentList = document.createElement('div');
-            sentList.id = 'sentList';
-            sentList.style.maxHeight = '350px';
-            sentList.style.overflowY = 'auto';
-            sentList.style.paddingRight = '10px';
-
-            column3.appendChild(sentList);
-
             customDiv.appendChild(column3);
 
             document.body.appendChild(customDiv);
 
+            fetchAndAppendFriends();
             fetchAndAppendRequests();
 
             document.addEventListener('click', function(event) {
@@ -972,11 +1134,40 @@
 })();
 
 
+
+
 (function() {
     'use strict';
 
 
     GM_addStyle(`
+
+    #searchInput::-webkit-input-placeholder {
+    color: #fff;
+ }
+      .friend-entry {
+    color: #FF69B4; /* lightmagenta */
+    transform: scale(1);
+    transition: 0.6s ease-in-out all;
+  }
+  .inviting-entry {
+    color: #90EE90; /* lightgreen */
+    transform: scale(1);
+    transition: 0.6s ease-in-out all;
+  }
+  .sent-entry {
+    color: #FFA500; /* orange */
+    transform: scale(1);
+    transition: 0.6s ease-in-out all;
+  }
+   .friend-entry:hover,
+   .inviting-entry:hover,
+   .sent-entry:hover {
+         color: CEA2E8;
+         transform: scale(1.1);
+         text-shadow: 1px 0 7px #B640FC;
+         transition: 0.6s ease-in-out all;
+   }
         .custom-link {
             color: #90c288 !important; /* Change color to red */
             font-weight: italic; /* Make text bold */
@@ -1040,14 +1231,12 @@
 
 
     function fetchGameInfo(gameID, parentNode) {
-        console.log(`Fetching game info for game ID: ${gameID}`);
         const gameURL = `https://www.kogama.com/games/play/${gameID}/`;
 
         GM_xmlhttpRequest({
             method: "GET",
             url: gameURL,
             onload: function(response) {
-                console.log(`Received response for game ID: ${gameID}`);
                 if (response.status === 200) {
 
                     const match = response.responseText.match(/<title>([^<]+)<\/title>/);
@@ -1066,17 +1255,13 @@
                         parentNode.nodeValue = parentNode.nodeValue.replace(regex, '');
                         parentNode.parentNode.insertBefore(link, parentNode.nextSibling);
 
-                        console.log(`Fetched game info: Game ID: ${gameID}, Game title: ${gameTitle}`);
                     } else {
-                        console.error(`Game title not found in response for game ID: ${gameID}`);
                     }
                 } else {
-                    console.error(`Error fetching game info for game ID: ${gameID}. Status: ${response.status}`);
-                    console.log("Response content:", response.responseText);
                 }
             },
             onerror: function(error) {
-                console.error(`Error fetching game info for game ID: ${gameID}`, error);
+                
             }
         });
     }
@@ -1453,9 +1638,9 @@
 
     GM_addStyle(`
         #mobile-page #error-404-page, #mobile-page #error-500-page, #mobile-page #error-disconnected-page { display: none; }
-        ._3TORb { background: rgba(0, 0, 0, 0.4); }
-        .MuiPaper-root { background-color: rgba(0, 0, 13, 0.15) !important;
-            backdrop-filter: blur(10px); border-radius: 25px !important; }
+        ._3TORb { background: rgba(0, 0, 0, .14); }
+        .MuiPaper-root { background-color: rgba(0, 0, 13, 0.14) !important;
+             border-radius: 25px !important; }
         .jycgY ._1S6v0 ._3Wsxf .wXhWi ._23o8J { margin-left: 3px; }
         #mobile-page #profile-page .section-top .section-top-background { background-image: none !important; }
         .background-avatar { background-image: none !important; }
@@ -1975,7 +2160,7 @@ const ConsoleStyle = Object.freeze({
             const BACKGROUND_SECTION = document.querySelector('._33DXe');
 
             // Fix REGEX
-            const BACKGROUND_REGEXP = /(?:\|\|)?Background:\s*(\d+)(?:,\s*filter:\s*(light|dark|blur|none))?;?(?:\|\|)?/i;
+            const BACKGROUND_REGEXP = /(?:\|\|)?Background:\s*(\d+)(?:,\s*filter:\s*(light|dark|blur|none|rain))?;?(?:\|\|)?/i;
             const match = BACKGROUND_REGEXP.exec(DESCRIPTION_TEXT);
 
             if (match && typeof match == 'object') {
@@ -1996,8 +2181,7 @@ const ConsoleStyle = Object.freeze({
                     BACKGROUND_SECTION.style.opacity = '1';
                 }, 1000);
 
-
-                BACKGROUND_SECTION.style.backgroundImage = `linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.3)), url("${imageSrc}")`;
+                BACKGROUND_SECTION.style.backgroundImage = `url("${imageSrc}")`;
 
                 switch (match[2]) {
                     case 'blur':
@@ -2007,11 +2191,17 @@ const ConsoleStyle = Object.freeze({
                     case 'none':
                         BACKGROUND_AVATAR.style.opacity = 'unset';
                         BACKGROUND_AVATAR.style.filter = 'none';
-
                         BACKGROUND_SECTION.style.filter = 'none';
                         break;
                     case 'dark':
                         BACKGROUND_SECTION.style.backgroundImage = `linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url("${imageSrc}")`;
+                        break;
+                    case 'light':
+                        BACKGROUND_SECTION.style.backgroundImage = `linear-gradient(rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.3)), url("${imageSrc}")`;
+                        break;
+                    case 'rain':
+                        BACKGROUND_SECTION.style.backgroundImage = `url("${imageSrc}")`;
+                        applyRainEffect();
                         break;
                 }
             }
@@ -2048,8 +2238,63 @@ const ConsoleStyle = Object.freeze({
         }
     }
 
+    function applyRainEffect() {
+        // Target elements for rain overlay
+        const targetElements = [
+            document.querySelector('._13UrL ._23KvS'),
+            document.querySelector('._13UrL ._23KvS ._33DXe')
+        ];
+
+        targetElements.forEach(element => {
+            if (element) {
+                // Create rain effect overlay
+                const rainOverlay = document.createElement('div');
+                rainOverlay.style.position = 'absolute';
+                rainOverlay.style.top = '0';
+                rainOverlay.style.left = '0';
+                rainOverlay.style.width = '100%';
+                rainOverlay.style.height = '100%';
+                rainOverlay.style.pointerEvents = 'none';
+                rainOverlay.style.zIndex = '2';
+                rainOverlay.style.overflow = 'hidden';
+                element.appendChild(rainOverlay);
+
+                // Create rain effect
+                const numDrops = 100;  // Increase number of drops for denser effect
+                for (let i = 0; i < numDrops; i++) {
+                    const drop = document.createElement('div');
+                    drop.className = 'rain-drop';
+                    drop.style.position = 'absolute';
+                    drop.style.background = 'rgba(255, 255, 255, 0.8)';  // More opaque
+                    drop.style.width = '3px';  // Wider drops
+                    drop.style.height = '15px';  // Longer drops
+                    drop.style.bottom = `${Math.random() * 100}%`;
+                    drop.style.left = `${Math.random() * 100}%`;
+                    drop.style.animation = `fall ${Math.random() * 1 + 1}s linear infinite`;
+                    rainOverlay.appendChild(drop);
+                }
+
+                // Add keyframes for rain animation
+                const styleSheet = document.createElement("style");
+                styleSheet.type = "text/css";
+                styleSheet.innerText = `
+                    @keyframes fall {
+                        to {
+                            transform: translateY(100vh);
+                        }
+                    }
+                    .rain-drop {
+                        z-index: 2;
+                    }
+                `;
+                document.head.appendChild(styleSheet);
+            }
+        });
+    }
+
     InsertBeforeLoad();
 })();
+
 
 
 (function() {
