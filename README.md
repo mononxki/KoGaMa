@@ -1,29 +1,15 @@
-# KoGaMa Repository
+# KoGaMa Repository Closure
 
-![KoGaMa Logo](https://i.ytimg.com/vi/nZgOVlMxVpc/maxresdefault.jpg)
+I am saddened to state that I will halt all of my development projects for KoGaMa.
 
-Welcome to the KoGaMa Repository! This collection of resources enhances your KoGaMa experience, offering guides, plugins, visual addons, and additional files in the `Zoffsets` folder.
+I had a blast of a time through all those 10 years of my journey with this game but some things need to end.
 
-## Overview
+I have hurt a lot of people and it genuinely weights me down emotionally and makes taking a single look at KoGaMa very painful.
 
-- **Guides**: Tutorials to maximize your KoGaMa experience.
+Utilify Update 3.0.2 (New emojis) is my last **public** commit towards kogama.
 
-- **Plugins**: Enhance KoGaMa with new features and functionalities.
+Any other works that you might eventually find under my name are either fake unless they come strictly from me or my friends.
 
-- **Visual Addons**: Extra visual elements to improve your KoGaMa environment.
+I will stop showing up on KoGaMa for the sake of my mental health and wellbeing but I still will try to be of help to my friends in times of their need.
 
-- **Zoffsets**: Additional files contributing to the KoGaMa experience.
-
-## Usage
-
-1. Explore folders like `Guides`, `Plugins`, `Visual Addons`, or `Zoffsets`.
-2. Majority of files you find require Tampermonkey, or a similar javascript injector to run.
-3. Customize and combine resources for your unique KoGaMa environment.
-
-## License
-
-This repository is licensed under [MIT License](https://github.com/zombieaztro/KoGaMa/blob/main/LICENSE). Use, modify, and distribute per license terms.
-
----
-
-Thank you for exploring the KoGaMa Repository! Questions or feedback? Reach out! 🎮🌟
+Farewell, Kaiser.
