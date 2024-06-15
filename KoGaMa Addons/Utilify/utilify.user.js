@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Utilify: KoGaMa
 // @namespace    discord/@simonvhs
-// @version      3.0
+// @version      3.0.3
 // @description  KoGaMa Utility script that aims to port as much KoGaBuddy features as possible alongside adding my own.
 // @author       ⛧ sim
 // @match        https://www.kogama.com/*
@@ -13,9 +13,11 @@
 // @grant        GM_setClipboard
 // @grant        GM_xmlhttpRequest
 // @grant        GM_addStyle
+// @downloadURL https://update.greasyfork.org/scripts/491505/Utilify%3A%20KoGaMa.user.js
+// @updateURL https://update.greasyfork.org/scripts/491505/Utilify%3A%20KoGaMa.meta.js
 // ==/UserScript==
 
-
+// CREDITS TO RAPTORFIRMAX FOR NOTICITNG AN ISSUE WITH LOGGING SCREEN.
 
 // - Allow Paste
 // - Auto Block Users
@@ -1333,8 +1335,19 @@ GM_addStyle(`
         ":block_stylin:": "https://i.imgur.com/saI7R2F.png",
         ":sword_sad:": "https://i.imgur.com/q1mrOpK.png",
         ":sword_smirk:": "https://i.imgur.com/CAblXlZ.png",
-        ":sword_yatta:": "https://i.imgur.com/Z5KAWmB.png"
-        // Add more emojis as needed
+        ":sword_yatta:": "https://i.imgur.com/Z5KAWmB.png",
+        ":Acerbermad:": "https://i.imgur.com/6TasQhg.gif",
+        ":Acerberisfine:": "https://i.imgur.com/H2bu8BM.gif",
+        ":Acerberthink:": "https://i.imgur.com/nL56Iz1.gif",
+        ":cerbersmug:": "https://i.imgur.com/AWb44VH.png",
+        ":cerberdum:": "https://i.imgur.com/fV4nHCe.png",
+        ":cerberded:": "https://i.imgur.com/8Tv4BRn.png",
+        ":cerbersob:": "https://i.imgur.com/aL5lNnj.png",
+        ":cerbercosy:": "https://i.imgur.com/yczvmt5.png",
+        ":cerberpout:": "https://i.imgur.com/sF6APQ1.png",
+        ":cerberwhot:": "https://i.imgur.com/vGecnjb.png",
+        ":cerberlove:": "https://i.imgur.com/SEyIO3S.png",
+        ":cerberlul:": "https://i.imgur.com/ugne7oK.png"
     };
 
     const emojiPickerDiv = document.createElement('div');
@@ -1445,6 +1458,7 @@ GM_addStyle(`
         }
     });
 })();
+
 (function() {
     'use strict';
 
@@ -2295,6 +2309,168 @@ const ConsoleStyle = Object.freeze({
     InsertBeforeLoad();
 })();
 
+(function() {
+    'use strict';
+    function createElement(tag, attributes, ...children) {
+        const element = document.createElement(tag);
+        for (let key in attributes) {
+            element.setAttribute(key, attributes[key]);
+        }
+        for (let child of children) {
+            if (typeof child === "string") {
+                element.appendChild(document.createTextNode(child));
+            } else {
+                element.appendChild(child);
+            }
+        }
+        return element;
+    }
+    function removeElement(selector) {
+        const element = document.querySelector(selector);
+        if (element) {
+            element.remove();
+        }
+    }
+    const observer = new MutationObserver((mutationsList) => {
+        for (let mutation of mutationsList) {
+            if (mutation.type === 'childList') {
+                removeElement('#login-button');
+                removeElement('#react-ingame-modal');
+            }
+        }
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+    function checkAndAddCustomLogin() {
+        const loginButton = document.querySelector('#login-button');
+        if (loginButton) {
+            const metaNav = document.querySelector('#meta-nav');
+            if (metaNav) {
+                loginButton.parentElement.remove();
+                const customLoginButton = createElement('button', {
+                    id: 'custom-login-button',
+                    class: 'login-button text',
+                    'aria-label': 'Custom Login'
+                }, 'Login');
+                const signupButton = document.querySelector('#signup-button');
+                metaNav.insertBefore(createElement('li', { class: 'login' }, customLoginButton), signupButton.parentElement);
+                customLoginButton.addEventListener('click', () => {
+                    if (document.querySelector('#custom-login-form')) return;
+
+                    const usernameInput = createElement('input', {
+                        type: 'text',
+                        id: 'custom-username',
+                        placeholder: 'Username',
+                        style: 'background: #444; color: #fff; border: 1px solid #555; padding: 10px; margin-bottom: 10px; width: 80%;'
+                    });
+
+                    const passwordInput = createElement('input', {
+                        type: 'password',
+                        id: 'custom-password',
+                        placeholder: 'Password',
+                        style: 'background: #444; color: #fff; border: 1px solid #555; padding: 10px; margin-bottom: 10px; width: 80%;'
+                    });
+
+                    const errorDisplay = createElement('div', {
+                        id: 'custom-login-error',
+                        style: 'color: red; margin-top: 10px; display: none;'
+                    });
+
+                    const loginForm = createElement('div', {
+                        id: 'custom-login-form',
+                        style: 'position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #333; padding: 20px; border: 1px solid #555; border-radius: 8px; width: 400px; height: 200px; text-align: center; display: flex; flex-direction: row; align-items: center; justify-content: space-around;'
+                    },
+                        createElement('div', { id: 'last-accounts', style: 'color: #fff; margin-right: 20px; flex: 1; max-width: 150px; text-align: left;' }),
+                        createElement('div', { style: 'flex: 2;' },
+                            usernameInput,
+                            passwordInput,
+                            createElement('button', {
+                                id: 'custom-login-submit',
+                                class: 'login-button text',
+                                style: 'background: #555; color: #fff; border: none; padding: 10px 20px; cursor: pointer;'
+                            }, 'Login'),
+                            errorDisplay
+                        )
+                    );
+
+                    document.body.appendChild(loginForm);
+                    document.addEventListener('click', (event) => {
+                        const form = document.querySelector('#custom-login-form');
+                        if (form && !form.contains(event.target) && event.target !== customLoginButton) {
+                            form.remove();
+                        }
+                    });
+                    document.querySelector('#custom-login-submit').addEventListener('click', () => {
+                        const username = usernameInput.value;
+                        const password = passwordInput.value;
+                        const accounts = JSON.parse(localStorage.getItem('accounts')) || [];
+                        const existingAccountIndex = accounts.findIndex(acc => acc.username === username && acc.password === password);
+                        if (existingAccountIndex !== -1) {
+                            const [existingAccount] = accounts.splice(existingAccountIndex, 1);
+                            accounts.push(existingAccount);
+                        } else {
+                            const duplicateIndex = accounts.findIndex(acc => acc.username === username);
+                            if (duplicateIndex !== -1) {
+                                accounts.splice(duplicateIndex, 1);
+                            }
+                            accounts.push({ username, password });
+                            if (accounts.length > 4) accounts.shift();
+                            localStorage.setItem('accounts', JSON.stringify(accounts));
+                            displayLastAccounts();
+                        }
+                        fetch('https://www.kogama.com/auth/login/', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({ username, password })
+                        })
+                        .then(response => {
+                            console.log('Response status:', response.status);
+                            if (response.status === 200) {
+                                window.location.href = 'https://www.kogama.com/profile/me';
+                            } else {
+                                errorDisplay.style.display = 'block';
+                                errorDisplay.textContent = 'Login failed.';
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                            errorDisplay.style.display = 'block';
+                            errorDisplay.textContent = 'Network error. Please try again later.';
+                        });
+                    });
+                    function displayLastAccounts() {
+                        const accounts = JSON.parse(localStorage.getItem('accounts')) || [];
+                        const lastAccountsDiv = document.querySelector('#last-accounts');
+                        lastAccountsDiv.innerHTML = '';
+                        accounts.forEach(account => {
+                            const accountDiv = createElement('div', { style: 'cursor: pointer; margin-bottom: 5px;' }, `${account.username}`);
+                            accountDiv.addEventListener('click', () => {
+                                usernameInput.value = account.username;
+                                passwordInput.value = account.password;
+                                document.querySelector('#custom-login-submit').click();
+                            });
+                            lastAccountsDiv.appendChild(accountDiv);
+                        });
+                    }
+                    displayLastAccounts();
+                });
+            }
+        }
+    }
+
+
+    const loginObserver = new MutationObserver((mutationsList) => {
+        for (let mutation of mutationsList) {
+            if (mutation.type === 'childList') {
+                checkAndAddCustomLogin();
+            }
+        }
+    });
+
+    loginObserver.observe(document.body, { childList: true, subtree: true });
+    checkAndAddCustomLogin();
+})();
 
 
 (function() {
