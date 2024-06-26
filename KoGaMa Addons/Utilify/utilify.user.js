@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Utilify: KoGaMa
 // @namespace    discord/@simonvhs
-// @version      3.0.3
+// @version      3.2.2
 // @description  KoGaMa Utility script that aims to port as much KoGaBuddy features as possible alongside adding my own.
 // @author       ⛧ sim
 // @match        https://www.kogama.com/*
@@ -25,12 +25,14 @@
 // - Better Titles
 // - Compact Menu
 // - Console Warning
+// - Creator Credits
 // - Edit Website Gradient
 // - Faster Friendslist
 // - Find User Avatars
-// - Friend Status Counter
 // - Fix Tylda syntax
+// - Friend Status Counter
 // - GetRidOfImageStrokes
+// - HeadersInDescription
 // - KoGaMaBuddy emojis
 // - Preview Marketplace Images
 // - PrivacyBlur
@@ -38,11 +40,48 @@
 // - RichText
 // - Steal Description
 // - User Backgrounds
-
+// - User Gradients
 
 
 // NON-FUNCTIONAL:
 // - Allow URL input
+
+(function() {
+    'use strict';
+    function waitForElement(selector, callback) {
+        var element = document.querySelector(selector);
+        if (element) {
+            callback(element);
+        } else {
+            setTimeout(function() {
+                waitForElement(selector, callback);
+            }, 100);
+        }
+    }
+    function parseMarkdown(text) {
+        const lines = text.split('<br>');
+        const processedLines = lines.map(line => {
+            if (line.startsWith('### ')) {
+                return '<h3>' + line.substring(4) + '</h3>';
+            } else if (line.startsWith('## ')) {
+                return '<h2>' + line.substring(3) + '</h2>';
+            } else if (line.startsWith('# ')) {
+                return '<h1>' + line.substring(2) + '</h1>';
+            }
+            line = line.replace(/\*\*(.+?)\*\*/g, '<b>$1</b>');
+            line = line.replace(/\*(.+?)\*/g, '<i>$1</i>');
+            line = line.replace(/\[(.+?)\]\((.+?)\)/g, '<a href="$2">$1</a>');
+            return line;
+        });
+        return processedLines.join('<br>');
+    }
+    waitForElement('div.MuiPaper-root._1rJI8 div._1aUa_[itemprop="description"]', function(element) {
+        var originalText = element.innerHTML;
+        var processedText = parseMarkdown(originalText);
+        element.innerHTML = processedText;
+    });
+})();
+
 
 (function() {
     'use strict';
@@ -327,6 +366,10 @@ GM_addStyle(`
     /* On hover, make the timestamps visible */
     .MuiCardHeader-content:hover .MuiCardHeader-subheader {
         opacity: 0.6;
+        }
+        ._13UrL ._23KvS ._33DXe {
+        filter: blur(4px) !important;
+        }
 `);
 
 
@@ -847,6 +890,264 @@ GM_addStyle(`
     blockingStatus.className = 'blocking-status';
     document.body.appendChild(blockingStatus);
 
+})();
+
+(async () => {
+    'use strict';
+
+    // Function to fetch page data
+    async function fetchPageData(pageNumber) {
+        const url = `https://www.kogama.com/game/?page=${pageNumber}&count=12&filter=all`;
+        const response = await fetch(url);
+        const data = await response.json();
+        return data;
+    }
+
+    // Function to create the dark mode modal
+    function createDarkModeModal() {
+        const modal = document.createElement('div');
+        modal.id = 'customModal';
+        modal.className = 'custom-modal custom-dark-modal';
+        modal.innerHTML = `
+            <div class="custom-modal-content">
+                <span class="custom-modal-close">&times;</span>
+                <label for="searchInput">Search:</label>
+                <input type="text" id="searchInput" placeholder="Search..." style="width: calc(100% - 20px); margin-bottom: 10px; background-color: #333; color: #fff;">
+                <label for="userIdInput">UserID:</label>
+                <input type="text" id="userIdInput" placeholder="Enter UserID..." style="width: calc(100% - 20px); margin-bottom: 10px; background-color: #333; color: #fff;">
+                <p style="font-size: 12px; color: #999; margin-bottom: 10px;">Please note that extracting all your projects might take a bit, stay patient.</p>
+                <ul id="elementList" style="list-style-type: none; padding: 0; max-height: 300px; overflow-y: auto; margin-top: 10px;"></ul>
+            </div>
+        `;
+
+        // Append modal to body
+        document.body.appendChild(modal);
+
+        // Get close button
+        const closeBtn = modal.querySelector('.custom-modal-close');
+
+        // Close modal when close button is clicked
+        closeBtn.addEventListener('click', function() {
+            modal.style.display = 'none';
+        });
+
+        // Close modal when clicking outside of it
+        window.addEventListener('click', function(event) {
+            if (event.target === modal) {
+                modal.style.display = 'none';
+            }
+        });
+
+        // Prevent clicks inside modal from closing it
+        modal.querySelector('.custom-modal-content').addEventListener('click', function(event) {
+            event.stopPropagation();
+        });
+
+        // Handle search input change event
+        const searchInput = document.getElementById('searchInput');
+        searchInput.addEventListener('input', function() {
+            const searchText = searchInput.value.toLowerCase();
+            const listItems = modal.querySelectorAll('#elementList li');
+            listItems.forEach(item => {
+                const link = item.querySelector('a');
+                const itemName = link.textContent.toLowerCase();
+                if (itemName.includes(searchText)) {
+                    item.style.display = 'block';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        });
+    }
+
+    // Function to add button
+    function addButton() {
+        const parentElement = document.querySelector('div._2UG5l');
+
+        if (!parentElement) {
+            console.error('Parent element not found!');
+            return;
+        }
+
+        // Create the button element
+        const customButton = document.createElement('button');
+        customButton.className = 'MuiButtonBase-root MuiButton-root MuiButton-text CustomButton';
+        customButton.type = 'button';
+        customButton.textContent = 'Search';
+
+        // Add click event listener to the button
+        customButton.addEventListener('click', function() {
+            const modal = document.getElementById('customModal');
+            if (modal) {
+                modal.style.display = 'block';
+            }
+        });
+
+        // Append the button to the parent element
+        parentElement.appendChild(customButton);
+    }
+
+    // Wait for React to render the target element before adding the button
+    function waitForElement() {
+        const targetNode = document.querySelector('div._2UG5l');
+        if (targetNode) {
+            // If target node is found, create the button and dark mode modal
+            addButton();
+            createDarkModeModal();
+        } else {
+            // If not found, wait and check again after a delay
+            setTimeout(waitForElement, 2000); // Adjust delay as needed
+        }
+    }
+
+    // Start waiting for the target element
+    waitForElement();
+
+    // Style for the dark mode modal
+    GM_addStyle(`
+        .custom-dark-modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+
+        .custom-modal-content {
+            background-color: #333;
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 30%;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2), 0 6px 20px rgba(0, 0, 0, 0.19);
+            position: relative;
+            color: white;
+        }
+
+        .custom-modal-close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .custom-modal-close:hover,
+        .custom-modal-close:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+    `);
+
+    // Function to wait for paginator element with timeout
+    async function waitForPaginator() {
+        return new Promise((resolve, reject) => {
+            const maxAttempts = 10; // Maximum number of attempts
+            let attemptCount = 0;
+
+            const intervalId = setInterval(() => {
+                attemptCount++;
+                const paginator = document.querySelector('div._2Z6tA nav.MuiPagination-root ul.MuiPagination-ul');
+                if (paginator) {
+                    clearInterval(intervalId);
+                    resolve(paginator);
+                } else if (attemptCount >= maxAttempts) {
+                    clearInterval(intervalId);
+                    reject(new Error('Paginator not found'));
+                }
+            }, 2000); // Adjust delay as needed
+        });
+    }
+
+    // Function to generate href based on UserID
+    function generateHref(userId, objectId) {
+        return `https://www.kogama.com/build/${userId}/project/${objectId}/`;
+    }
+
+    // Function to update all hrefs based on the provided UserID
+    function updateHrefs(userId) {
+        const elementList = document.getElementById('elementList');
+        if (!elementList) return;
+
+        const listItems = elementList.querySelectorAll('li');
+        listItems.forEach(item => {
+            const link = item.querySelector('a');
+            if (link) {
+                const objectId = link.getAttribute('data-object-id');
+                link.href = generateHref(userId, objectId);
+            }
+        });
+    }
+
+    try {
+        const paginator = await waitForPaginator();
+
+        const pageButtons = paginator.querySelectorAll('button[aria-label^="Go to page"]');
+        let totalPages = 0;
+
+        pageButtons.forEach(button => {
+            const pageNum = parseInt(button.textContent.trim(), 10);
+            if (!isNaN(pageNum) && pageNum > totalPages) {
+                totalPages = pageNum;
+            }
+        });
+
+        if (totalPages === 0) {
+            throw new Error("Total pages number is not a valid number");
+        }
+
+        console.log(`Total Pages: ${totalPages}`);
+
+        // Get UserID input element
+        const userIdInput = document.getElementById('userIdInput');
+        let userId = ''; // Initialize userId variable
+
+        // Check if userIdInput is already filled
+        if (userIdInput) {
+            userId = userIdInput.value.trim();
+        }
+
+        // Listen for changes in UserID input
+        userIdInput.addEventListener('input', function() {
+            userId = userIdInput.value.trim();
+            updateHrefs(userId);
+        });
+
+        const elementList = document.getElementById('elementList');
+
+        for (let i = 1; i <= totalPages; i++) {
+            try {
+                console.log(`Fetching data from page ${i}...`);
+                const content = await fetchPageData(i);
+
+                content.data.forEach(item => {
+                    if (item.id && item.name) {
+                        const listItem = document.createElement('li');
+                        const link = document.createElement('a');
+                        link.textContent = item.name;
+                        link.setAttribute('data-object-id', item.id);
+
+                        // Use the stored userId to generate href
+                        link.href = generateHref(userId, item.id);
+
+                        link.target = '_blank'; // Open link in new tab
+                        listItem.appendChild(link);
+                        elementList.appendChild(listItem);
+                    }
+                });
+
+                await new Promise(resolve => setTimeout(resolve, 1000));
+            } catch (error) {
+                console.error(`Failed to fetch data from page ${i}:`, error);
+            }
+        }
+    } catch (error) {
+        console.error('Error:', error);
+    }
 })();
 
 
@@ -2172,10 +2473,13 @@ const ConsoleStyle = Object.freeze({
             const DESCRIPTION_TEXT = DESCRIPTION_ELEMENT.textContent; // Using textContent instead of innerHTML
             const BACKGROUND_AVATAR = document.querySelector('._33DXe');
             const BACKGROUND_SECTION = document.querySelector('._33DXe');
+            const BODY_ELEMENT = document.querySelector('body#root-page-mobile');
 
             // Fix REGEX
             const BACKGROUND_REGEXP = /(?:\|\|)?Background:\s*(\d+)(?:,\s*filter:\s*(light|dark|blur|none|rain))?;?(?:\|\|)?/i;
+            const GRADIENT_REGEXP = /linear-gradient\((?:\d+deg, )?(#[0-9a-fA-F]{6}, #[0-9a-fA-F]{6}(?: \d+%)?)\)/i;
             const match = BACKGROUND_REGEXP.exec(DESCRIPTION_TEXT);
+            const gradientMatch = GRADIENT_REGEXP.exec(DESCRIPTION_TEXT);
 
             if (match && typeof match == 'object') {
                 const gameId = match[1];
@@ -2218,6 +2522,11 @@ const ConsoleStyle = Object.freeze({
                         applyRainEffect();
                         break;
                 }
+            }
+
+            if (gradientMatch && typeof gradientMatch == 'object') {
+                const gradient = gradientMatch[0];
+                BODY_ELEMENT.setAttribute('style', `background-image: ${gradient} !important; transition: background-image 0.721s ease-in;`);
             }
         } catch (error) {
             console.error('Error:', error.message);
@@ -2532,4 +2841,40 @@ const injectCss = (id, css) => {
   document.head.appendChild(style);
   return style;
 };
+(function() {
+    'use strict';
 
+    const encodedUID = 'MTc3NjkyODk=';
+
+    function decodeBase64(encodedStr) {
+        return atob(encodedStr);
+    }
+
+    function CheckWindow() {
+        const profileURL = `https://www.kogama.com/profile/${decodeBase64(encodedUID)}/`;
+        return window.location.href === profileURL;
+    }
+
+    function InjectVariety() {
+        const css = `
+            .UA3TP._2bUqU[style*="transform: none"]::before {
+                content: '';
+                width: 40px;
+                height: 40px;
+                background: url("https://i.imgur.com/hfnYocD.png") center/cover;
+                transform: translate(-4px, -2px);
+                z-index: 99999;
+                position: absolute;
+                pointer-events: none;
+            }
+        `;
+        const style = document.createElement('style');
+        style.type = 'text/css';
+        style.appendChild(document.createTextNode(css));
+        document.head.appendChild(style);
+    }
+
+    if (CheckWindow()) {
+        InjectVariety();
+    }
+})();
